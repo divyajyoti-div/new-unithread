@@ -10,7 +10,6 @@
 </head>
 <body>
 
-<!-- ═══════════ NAVBAR ═══════════ -->
 <header class="navbar" id="navbar">
   <div class="nav-left">
     <button class="hamburger" id="menuToggle"><span></span><span></span><span></span></button>
@@ -27,6 +26,9 @@
       <span class="toggle-thumb"></span>
     </button>
     <button class="btn-create" id="btnCreate" style="display:none">+ Create Post</button>
+    
+    <button class="btn-ghost" id="navMessagesBtnTop" style="display:none; padding: 8px 14px; font-size: 0.85rem; border-color: var(--border-2);">💬 Messages</button>
+    
     <div class="user-menu" id="userMenu" style="display:none">
       <button class="avatar-btn" id="avatarBtn">
         <img src="" alt="" class="nav-avatar" id="navAvatar"/>
@@ -66,7 +68,6 @@
   </div>
 </header>
 
-<!-- ═══════════ SIDEBAR ═══════════ -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-inner">
   <ul class="sb-list">
@@ -87,13 +88,12 @@
       <li class="sb-item" data-cat="exams">📝 Exam Prep</li>
       <li class="sb-item" data-cat="sports">🏀 Sports & Events</li>
       <li class="sb-item" data-cat="lost">🔍 Lost &amp; Found</li>
-      <li class="sb-item" data-cat="marketplace">🛒Marketplace</li>
+      <li class="sb-item" data-cat="marketplace">🛒 Marketplace</li>
     </ul>
   </div>
 </aside>
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-<!-- ═══════════ PAGE: FEED ═══════════ -->
 <main class="main" id="pageFeed">
   <div class="sort-bar">
     <div class="sort-pills">
@@ -110,7 +110,6 @@
   <div class="feed" id="feed"></div>
 </main>
 
-<!-- ═══════════ PAGE: POST DETAIL ═══════════ -->
 <main class="main" id="pageDetail" style="display:none">
   <button class="back-btn" id="backBtn">← Back to feed</button>
   <div id="detailPostWrap"></div>
@@ -137,7 +136,6 @@
   </div>
 </main>
 
-<!-- ═══════════ PAGE: PROFILE ═══════════ -->
 <main class="main" id="pageProfile" style="display:none">
   <button class="back-btn" id="backFromProfile">← Back to feed</button>
   <div class="pf-wrap">
@@ -163,17 +161,40 @@
     </div>
     <div class="pf-section" id="pfAvatarSection" style="display:none">
       <p class="pf-section-title">Choose your avatar style</p>
+      
+      <button class="btn-ghost" id="btnUploadCustomAvatar" style="width: 100%; margin-bottom: 15px; border-color: var(--brand); color: var(--brand);">
+        📁 Upload Picture from Device
+      </button>
+      <input type="file" id="customAvatarInput" accept="image/*" style="display:none;" />
       <div class="pf-av-grid" id="pfAvGrid"></div>
       <button class="pf-cancel-btn" id="pfCancelAvatar">Cancel</button>
     </div>
+    
     <div class="pf-fields">
-      <div class="pf-field"><label class="pf-lbl">Display Name</label><input class="pf-inp" id="pfDisplayName" placeholder="Your name" maxlength="40"/></div>
-      <div class="pf-field"><label class="pf-lbl">Course / Major</label><input class="pf-inp" id="pfCourse" placeholder="e.g. BCA, B.Tech"/></div>
-      <div class="pf-field"><label class="pf-lbl">Year</label>
-        <select class="pf-inp" id="pfYear"><option value="">Select year</option><option>1st Year</option><option>2nd Year</option><option>3rd Year</option><option>4th Year</option></select>
+      <div class="pf-field">
+        <label class="pf-lbl">Display Name <small style="color:var(--text-3)">(Set by Admin)</small></label>
+        <input class="pf-inp" id="pfDisplayName" disabled style="opacity:0.5; cursor:not-allowed;" placeholder="Your name"/>
       </div>
-      <div class="pf-field"><label class="pf-lbl">Email <small style="color:var(--text-3)">(cannot change)</small></label><input class="pf-inp" id="pfEmailField" disabled style="opacity:0.4;cursor:not-allowed"/></div>
+      <div class="pf-field">
+        <label class="pf-lbl">Course / Major <small style="color:var(--text-3)">(Set by Admin)</small></label>
+        <input class="pf-inp" id="pfCourse" disabled style="opacity:0.5; cursor:not-allowed;" placeholder="e.g. BCA, B.Tech"/>
+      </div>
+      <div class="pf-field">
+        <label class="pf-lbl">Year <small style="color:var(--text-3)">(Set by Admin)</small></label>
+        <select class="pf-inp" id="pfYear" disabled style="opacity:0.5; cursor:not-allowed;">
+          <option value="">Select year</option>
+          <option>1st Year</option>
+          <option>2nd Year</option>
+          <option>3rd Year</option>
+          <option>4th Year</option>
+        </select>
+      </div>
+      <div class="pf-field">
+        <label class="pf-lbl">Email <small style="color:var(--text-3)">(cannot change)</small></label>
+        <input class="pf-inp" id="pfEmailField" disabled style="opacity:0.4;cursor:not-allowed"/>
+      </div>
     </div>
+    
     <div class="pf-save-row">
       <span class="pf-msg" id="pfMsg"></span>
       <button class="pf-save" id="pfSaveBtn">Save Changes</button>
@@ -181,10 +202,8 @@
   </div>
 </main>
 
-<!-- ═══════════ PAGE: CREATE POST ═══════════ -->
 <main class="main create-main" id="pageCreate" style="display:none">
 
-  <!-- Header row -->
   <div class="cp-header">
     <h1 class="cp-title">Create post</h1>
     <button class="cp-drafts-btn" id="cpDraftsBtn">
@@ -193,7 +212,6 @@
     </button>
   </div>
 
-  <!-- Author row -->
   <div class="cp-author-row">
     <img src="" alt="" class="cp-author-avatar" id="postAsAvatar"/>
     <span class="cp-author-name" id="postAsName">u/—</span>
@@ -204,7 +222,6 @@
     </label>
   </div>
 
-  <!-- Community selector -->
   <div class="cp-community-row">
     <label class="cp-field-lbl">Community</label>
     <select class="cp-select" id="postCategory">
@@ -219,7 +236,6 @@
     </select>
   </div>
 
-  <!-- Post type tabs -->
   <div class="cp-tabs">
     <button class="cp-tab active" data-tab="text">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -239,16 +255,13 @@
     </button>
   </div>
 
-  <!-- Content area -->
   <div class="cp-content">
 
-    <!-- Title (shared across all tabs) -->
     <div class="cp-title-field">
       <input type="text" class="cp-title-input" id="postTitle" placeholder="Title*" maxlength="300"/>
       <span class="cp-title-count" id="titleCount">0/300</span>
     </div>
 
-    <!-- Tags -->
     <div class="cp-tags-row" id="cpTagsRow">
       <div class="cp-tags-wrap" id="cpTagsWrap">
         <span class="cp-tag-placeholder" id="cpTagPlaceholder">Add tags</span>
@@ -257,7 +270,6 @@
       </div>
     </div>
 
-    <!-- ── TAB: TEXT ── -->
     <div class="cp-panel" id="panelText">
       <div class="rte-toolbar">
         <button class="rte-btn" data-cmd="bold"         title="Bold"><b>B</b></button>
@@ -284,7 +296,6 @@
       <div class="rte-editor" id="rteEditor" contenteditable="true" data-placeholder="Text (optional)"></div>
     </div>
 
-    <!-- ── TAB: MEDIA ── -->
     <div class="cp-panel" id="panelMedia" style="display:none">
       <div class="cp-upload-zone" id="cpUploadZone">
         <input type="file" id="cpFileInput" accept="image/*,video/*" multiple style="display:none"/>
@@ -299,7 +310,6 @@
       </div>
     </div>
 
-    <!-- ── TAB: LINK ── -->
     <div class="cp-panel" id="panelLink" style="display:none">
       <div class="cp-link-field">
         <label class="cp-field-lbl">URL</label>
@@ -318,7 +328,6 @@
       </div>
     </div>
 
-    <!-- ── TAB: POLL ── -->
     <div class="cp-panel" id="panelPoll" style="display:none">
       <div class="cp-poll-options" id="cpPollOptions">
         <div class="cp-poll-option">
@@ -345,9 +354,7 @@
       </div>
     </div>
 
-  </div><!-- /cp-content -->
-
-  <!-- Footer actions -->
+  </div>
   <div class="cp-footer">
     <button class="cp-save-draft-btn" id="cpSaveDraftBtn">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -359,7 +366,6 @@
     </div>
   </div>
 
-  <!-- Drafts drawer -->
   <div class="cp-drafts-drawer" id="cpDraftsDrawer" style="display:none">
     <div class="cp-drafts-hdr">
       <h3>Saved Drafts</h3>
@@ -372,8 +378,143 @@
 
 </main>
 
+<main class="main" id="pagePublicProfile" style="display:none">
+  <button class="back-btn" id="backFromPublicProfile">← Back</button>
+  <div class="pf-wrap">
+    <div class="pf-hero">
+      <div class="pf-av-zone">
+        <img src="" alt="" class="pf-avatar" id="pubAvatar"/>
+      </div>
+      <div class="pf-identity">
+        <h2 class="pf-uname" id="pubUsername">u/—</h2>
+        <span class="pf-badge">✓ Verified Student</span>
+      </div>
+    </div>
+    <div class="pf-stats">
+      <div class="pf-stat"><span class="pf-stat-val" id="pubCourse">—</span><span class="pf-stat-lbl">Course</span></div>
+      <div class="pf-stat-sep"></div>
+      <div class="pf-stat"><span class="pf-stat-val" id="pubYear">—</span><span class="pf-stat-lbl">Year</span></div>
+    </div>
+    <div class="pf-save-row" style="justify-content: center; background: var(--bg-mid);">
+      <button class="btn-submit" id="btnMessageUser">💬 Message User</button>
+    </div>
+  </div>
+</main>
+
+<main class="main" id="pageAdmin" style="display:none; max-width: 1000px; margin: 0 auto;">
+  <button class="back-btn" id="backFromAdmin">← Back to feed</button>
+  <div class="cp-header" style="margin-bottom: 20px;">
+    <h1 class="cp-title">🛡️ Admin Dashboard</h1>
+  </div>
+  
+  <div class="cp-tabs">
+    <button class="cp-tab active" data-atab="users">👥 Manage Users</button>
+    <button class="cp-tab" data-atab="posts">📝 Moderate Posts</button>
+  </div>
+
+  <div class="cp-panel" id="adminPanelUsers">
+    <div style="margin-bottom: 15px;">
+      <h3 style="margin: 0;">Pending Access Requests</h3>
+      <p style="color: var(--text-3); font-size: 0.9rem;">Review and approve students before they can log in.</p>
+    </div>
+    <div style="overflow-x: auto; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Reg No</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Course / Year</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adminUsersList">
+          <tr><td colspan="5" style="text-align:center; padding: 20px;">Loading requests...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="cp-panel" id="adminPanelPosts" style="display:none">
+    <div style="overflow-x: auto; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Author</th>
+            <th>Upvotes</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="adminPostsList">
+          <tr><td colspan="4" style="text-align:center; padding: 20px;">Loading posts...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<main class="main chat-main" id="pageChat" style="display:none">
+  <div class="chat-container">
+    
+    <div class="chat-sidebar">
+      <div class="chat-header">
+        <h3>Messages</h3>
+        <button class="btn-ghost" style="padding: 4px 10px; font-size: 0.8rem;" id="btnNewGroup">+ Group</button>
+      </div>
+      <div class="chat-list" id="chatList">
+        <p style="padding:20px; color:var(--text-3); text-align:center; font-size:0.85rem;">No conversations yet.</p>
+      </div>
+    </div>
+    
+    <div class="chat-window" id="chatWindow" style="display:none;">
+      
+      <div class="chat-window-header">
+        <button class="back-btn chat-back" id="chatBackBtn" style="margin:0; padding:4px 8px; display:none;">←</button>
+        <img src="" alt="" class="chat-active-avatar" id="chatActiveAvatar"/>
+        <div style="flex: 1; display:flex; flex-direction:column; gap:2px;">
+          <h3 id="chatActiveName" style="color:var(--text-1); margin: 0;">Loading...</h3>
+          <span id="chatActiveUsername" style="font-size:0.75rem; color:var(--text-3);">—</span>
+        </div>
+        
+        <button class="btn-ghost" id="btnAddMember" style="display:none; padding:4px 10px; font-size:0.8rem;">+ Add Member</button>
+
+        <button class="avatar-btn" id="btnGroupMenuToggle" style="display:none; color: var(--text-3); font-size:1.1rem">⋮</button>
+        
+        <div class="edit-group-menu" id="editGroupMenu">
+          <button class="group-menu-item" id="btnChangeGroupPic">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Change Group Photo
+          </button>
+          <div class="pdrop-div"></div>
+          <button class="group-menu-item pdrop-red" id="btnDeleteGroup">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete Group
+          </button>
+        </div>
+      </div>
+      
+      <div class="chat-messages" id="chatMessagesVertical"></div>
+      
+      <div class="chat-input-area">
+        <input type="text" class="chat-input" id="chatInputMsg" placeholder="Type a message..." autocomplete="off"/>
+        <button class="btn-submit chat-send" id="chatSendBtn">Send</button>
+      </div>
+      
+    </div>
+    
+    <div class="chat-empty" id="chatEmptyState">
+      <div style="font-size:3rem; margin-bottom:10px;">💬</div>
+      <h3 style="color:var(--text-1);">Your Messages</h3>
+      <p style="color:var(--text-3); font-size:0.9rem;">Select a conversation or start a new one from a user's profile.</p>
+    </div>
+    
+  </div>
+</main>
+<input type="file" id="groupPicInput" accept="image/*" style="display:none;" />
 <div class="toast-container" id="toastContainer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<input type="file" id="profilePicInput" accept="image/*" style="display:none;" />
 <script src="app.js"></script>
 </body>
 </html>

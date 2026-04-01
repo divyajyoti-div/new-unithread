@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   UNITHREAD — server.js  (OTP Auth Edition)
+   UNITHREAD — server.js  (Bulletproof Auth & Chat Edition)
 ═══════════════════════════════════════════════════════════════ */
 require("dotenv").config();
 const express   = require("express");
@@ -50,7 +50,7 @@ const transporter = emailConfigured
       service: "gmail",
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,  // Gmail App Password (not your regular password)
+        pass: process.env.SMTP_PASS,  // Gmail App Password
       },
     })
   : null;
@@ -93,7 +93,7 @@ app.post("/api/send-otp", async (req, res) => {
   }
 
   if (!adminDb) {
-    /* ── DEMO MODE: skip DB check, always succeed ── */
+    /* ── DEMO MODE ── */
     const demoOtp = "123456";
     console.log(`\n📧 DEMO MODE — OTP for ${email}: ${demoOtp}\n`);
     return res.json({ success: true, demo: true, demoOtp });
@@ -117,9 +117,9 @@ app.post("/api/send-otp", async (req, res) => {
     /* 2. Generate 6-digit OTP */
     const otp      = String(Math.floor(100000 + Math.random() * 900000));
     const otpHash  = crypto.createHash("sha256").update(otp).digest("hex");
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    /* 3. Invalidate any existing OTPs for this email */
+    /* 3. Invalidate existing OTPs */
     await adminDb.from("otp_codes").update({ used: true }).eq("email", email.toLowerCase().trim()).eq("used", false);
 
     /* 4. Store new OTP */
@@ -142,20 +142,17 @@ app.post("/api/send-otp", async (req, res) => {
           <div style="font-family:sans-serif;max-width:480px;margin:0 auto;background:#0d1221;color:#f0f4ff;padding:32px;border-radius:16px;border:1px solid #1a2640">
             <div style="text-align:center;margin-bottom:28px">
               <h1 style="font-size:1.6rem;margin:0">Uni<span style="color:#a78bfa">Thread</span></h1>
-              <p style="color:#7588a8;margin-top:6px">Your Campus, Your Voice</p>
             </div>
             <p style="color:#c8d3eb;margin-bottom:20px">Hi <strong>${student.name || student.reg_no}</strong>,</p>
             <p style="color:#c8d3eb;margin-bottom:24px">Your one-time password is:</p>
             <div style="background:#111827;border:1px solid #243352;border-radius:12px;padding:24px;text-align:center;margin-bottom:24px">
               <span style="font-size:2.5rem;font-weight:800;letter-spacing:12px;color:#a78bfa">${otp}</span>
             </div>
-            <p style="color:#7588a8;font-size:0.85rem">This OTP expires in <strong style="color:#f0f4ff">10 minutes</strong>. Do not share it with anyone.</p>
-            <p style="color:#334155;font-size:0.75rem;margin-top:24px;text-align:center">UniThread — ${student.course}, ${student.year}</p>
+            <p style="color:#7588a8;font-size:0.85rem">This OTP expires in 10 minutes.</p>
           </div>`,
       });
       console.log(`📧 OTP emailed to ${email}`);
     } else {
-      /* No email setup — print to console for testing */
       console.log(`\n📧 OTP for ${email}: ${otp}\n`);
     }
 
@@ -168,7 +165,7 @@ app.post("/api/send-otp", async (req, res) => {
 });
 
 /* ═══════════════════════════════════════════════════════════
-   API — STEP 2: Verify OTP → create/login Supabase account
+   API — STEP 2: Verify OTP & Auto-Heal Supabase Accounts
 ═══════════════════════════════════════════════════════════ */
 app.post("/api/verify-otp", async (req, res) => {
   const { email, otp, regNo } = req.body;
@@ -218,48 +215,68 @@ app.post("/api/verify-otp", async (req, res) => {
       .eq("email", email.toLowerCase().trim())
       .single();
 
-    /* 4. Create Supabase auth user (or sign in if already exists) */
-    const password = `UT_${otpHash.slice(0,16)}_${student.reg_no}`;  // deterministic strong password
+    /* 4. THE FIX: Create a STATIC deterministic password */
+    const staticPassword = crypto
+      .createHash("sha256")
+      .update(email.toLowerCase().trim() + (process.env.SUPABASE_ANON_KEY || "fallback"))
+      .digest("hex")
+      .slice(0, 32);
 
     let session = null;
 
-    // Try to sign in first
+    // Try to sign in normally
     const { data: signInData, error: signInErr } = await db.auth.signInWithPassword({
       email: email.toLowerCase().trim(),
-      password,
+      password: staticPassword,
     });
 
-    if (!signInErr && signInData?.session) {
-      session = signInData.session;
+    if (signInErr) {
+      // If login fails, check the Supabase Vault directly.
+      const { data: listData } = await adminDb.auth.admin.listUsers();
+      const existingUser = listData?.users?.find(u => u.email === email.toLowerCase().trim());
+
+      if (existingUser) {
+        // AUTO-HEAL: User exists but password was wrong. Force reset it.
+        await adminDb.auth.admin.updateUserById(existingUser.id, { password: staticPassword });
+        
+        // Sign in again with the corrected password
+        const { data: retrySignIn, error: retryErr } = await db.auth.signInWithPassword({
+          email: email.toLowerCase().trim(),
+          password: staticPassword,
+        });
+        if (retryErr) throw retryErr;
+        session = retrySignIn.session;
+      } else {
+        // User truly does not exist. Safely create a brand new account.
+        const { data: newUser, error: createErr } = await adminDb.auth.admin.createUser({
+          email: email.toLowerCase().trim(),
+          password: staticPassword,
+          email_confirm: true,
+          user_metadata: { username: student.reg_no, course: student.course, year: student.year },
+        });
+        if (createErr) throw createErr;
+
+        // Sign the new user in
+        const { data: newSignIn, error: newSignInErr } = await db.auth.signInWithPassword({
+          email: email.toLowerCase().trim(),
+          password: staticPassword,
+        });
+        if (newSignInErr) throw newSignInErr;
+        session = newSignIn.session;
+
+        // Create their public profile
+        await adminDb.from("users").upsert({
+          id: newUser.user.id,
+          email: email.toLowerCase().trim(),
+          username: student.reg_no,
+          course: student.course,
+          year: student.year,
+          points: 0,
+        });
+      }
     } else {
-      // User doesn't exist yet — create them
-      const { data: newUser, error: createErr } = await adminDb.auth.admin.createUser({
-        email: email.toLowerCase().trim(),
-        password,
-        email_confirm: true,  // skip email verification
-        user_metadata: { username: student.reg_no, course: student.course, year: student.year },
-      });
-
-      if (createErr) throw createErr;
-
-      // Sign in the newly created user
-      const { data: newSignIn, error: newSignInErr } = await db.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
-        password,
-      });
-
-      if (newSignInErr) throw newSignInErr;
-      session = newSignIn.session;
-
-      // Upsert profile in public.users
-      await adminDb.from("users").upsert({
-        id: newUser.user.id,
-        email: email.toLowerCase().trim(),
-        username: student.reg_no,
-        course: student.course,
-        year: student.year,
-        points: 0,
-      });
+      // Normal login succeeded!
+      session = signInData.session;
     }
 
     res.json({
@@ -274,7 +291,187 @@ app.post("/api/verify-otp", async (req, res) => {
   }
 });
 
-/* ── HTML routes FIRST ────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   API — CHAT & PROFILES
+═══════════════════════════════════════════════════════════ */
+
+// 1. Get Public Profile (When you click a username)
+app.get("/api/user/:username", async (req, res) => {
+  if (!adminDb) return res.status(500).json({ error: "DB not connected" });
+  try {
+    const searchTerm = req.params.username;
+    
+    // Search by Reg No OR old Email Prefix
+    const { data, error } = await adminDb
+      .from("users")
+      .select("id, username, course, year")
+      .or(`username.eq.${searchTerm},email.ilike.${searchTerm}@%`)
+      .limit(1);
+      
+    if (error || !data || data.length === 0) return res.status(404).json({ error: "User not found" });
+    res.json({ success: true, user: data[0] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 2. Start or Get a 1-on-1 Chat
+app.post("/api/chat/start", async (req, res) => {
+  const { myId, targetId } = req.body;
+  if (!adminDb) return res.status(500).json({ error: "DB not connected" });
+
+  try {
+    const { data: myChats } = await adminDb.from("participants").select("conversation_id").eq("user_id", myId);
+    const myChatIds = myChats.map(c => c.conversation_id);
+
+    if (myChatIds.length > 0) {
+      const { data: sharedChats } = await adminDb
+        .from("participants")
+        .select("conversation_id")
+        .eq("user_id", targetId)
+        .in("conversation_id", myChatIds);
+
+      if (sharedChats && sharedChats.length > 0) {
+        return res.json({ success: true, conversation_id: sharedChats[0].conversation_id });
+      }
+    }
+
+    const { data: newChat, error: chatErr } = await adminDb.from("conversations").insert([{ is_group: false }]).select().single();
+    if (chatErr) throw chatErr;
+
+    await adminDb.from("participants").insert([
+      { conversation_id: newChat.id, user_id: myId },
+      { conversation_id: newChat.id, user_id: targetId }
+    ]);
+
+    res.json({ success: true, conversation_id: newChat.id });
+  } catch (err) {
+    console.error("Chat error:", err);
+    res.status(500).json({ error: "Failed to start chat" });
+  }
+});
+
+// 3. Create a Group Chat (Tracks Creator)
+app.post("/api/chat/group", async (req, res) => {
+  const { groupName, participantIds } = req.body; 
+  if (!adminDb) return res.status(500).json({ error: "DB not connected" });
+
+  try {
+    const { data: newGroup, error: grpErr } = await adminDb
+      .from("conversations")
+      .insert([{ is_group: true, group_name: groupName, created_by: participantIds[0] }])
+      .select()
+      .single();
+    
+    if (grpErr) throw grpErr;
+
+    const inserts = participantIds.map(id => ({ conversation_id: newGroup.id, user_id: id }));
+    await adminDb.from("participants").insert(inserts);
+
+    res.json({ success: true, conversation_id: newGroup.id });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create group" });
+  }
+});
+
+// 4. Add Member to Group Chat
+app.post("/api/chat/add-member", async (req, res) => {
+  const { conversation_id, username } = req.body;
+  if (!adminDb) return res.status(500).json({ error: "DB not connected" });
+
+  try {
+    const { data: user, error: userErr } = await adminDb
+      .from("users")
+      .select("id")
+      .eq("username", username.trim())
+      .single();
+
+    if (userErr || !user) return res.status(404).json({ error: "User not found" });
+
+    const { error: insertErr } = await adminDb
+      .from("participants")
+      .insert([{ conversation_id, user_id: user.id }]);
+
+    if (insertErr && insertErr.code === '23505') {
+      return res.status(400).json({ error: "User is already in this group!" });
+    } else if (insertErr) throw insertErr;
+
+    res.json({ success: true, message: "User added!" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to add user" });
+  }
+});
+
+// 5. Delete Group (Protected by Admin check)
+app.delete("/api/chat/group/:id", async (req, res) => {
+  if (!adminDb) return res.status(500).json({ error: "DB not connected" });
+  try {
+    const { userId } = req.query; 
+    
+    const { data: convo } = await adminDb.from("conversations").select("created_by").eq("id", req.params.id).single();
+    
+    if (convo.created_by && convo.created_by !== userId) {
+        return res.status(403).json({ error: "Only the group admin can delete this group." });
+    }
+
+    const { error } = await adminDb.from("conversations").delete().eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete group" });
+  }
+});
+
+// 6. Update Group Avatar
+app.patch("/api/chat/group/:id/avatar", async (req, res) => {
+  if (!adminDb) return res.status(500).json({ error: "DB not connected" });
+  try {
+    const { avatarUrl } = req.body;
+    const { error } = await adminDb.from("conversations").update({ group_avatar_url: avatarUrl }).eq("id", req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update avatar" });
+  }
+});
+
+/* ═══════════════════════════════════════════════════════════
+   API — ADMIN DASHBOARD
+═══════════════════════════════════════════════════════════ */
+// Helper to check if a user is an admin
+async function checkAdmin(userId) {
+  if (!userId || !adminDb) return false;
+  const { data } = await adminDb.from("users").select("is_admin").eq("id", userId).single();
+  return data?.is_admin === true;
+}
+
+// 1. Get All Users
+app.get("/api/admin/users", async (req, res) => {
+  if (!(await checkAdmin(req.query.userId))) return res.status(403).json({ error: "Unauthorized" });
+  
+  try {
+    const { data, error } = await adminDb.from("users").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    res.json({ success: true, users: data });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+// 2. Delete a User
+app.delete("/api/admin/users/:id", async (req, res) => {
+  if (!(await checkAdmin(req.query.userId))) return res.status(403).json({ error: "Unauthorized" });
+
+  try {
+    // Deleting from auth.admin automatically cascades and deletes their profile, posts, and comments!
+    const { error } = await adminDb.auth.admin.deleteUser(req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete user" });
+  }
+});
+/* ── HTML routes ──────────────────────────────────────────── */
 app.get("/",        (req, res) => serveFile("landing.html", res));
 app.get("/feed",    (req, res) => serveFile("index.html",   res));
 
@@ -282,11 +479,8 @@ app.get("/feed",    (req, res) => serveFile("index.html",   res));
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
 
 /* ── 404 fallback ─────────────────────────────────────────── */
-/* API routes that aren't found return JSON (not HTML redirect) */
 app.use((req, res) => {
-  if (req.path.startsWith("/api/")) {
-    return res.status(404).json({ error: "API route not found: " + req.path });
-  }
+  if (req.path.startsWith("/api/")) return res.status(404).json({ error: "API route not found" });
   res.redirect("/");
 });
 
@@ -295,6 +489,5 @@ app.listen(PORT, () => {
 🚀  UniThread running!
     Landing  → http://localhost:${PORT}/
     Feed     → http://localhost:${PORT}/feed
-    API test → http://localhost:${PORT}/api/send-otp  (should return JSON)
   `);
 });

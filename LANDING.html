@@ -167,7 +167,36 @@
           </div>
           <span class="aform-hint">Exactly as it appears on your ID card</span>
         </div>
+<div class="aform-group">
+          <label class="aform-label">Full Name</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" class="aform-input has-icon" id="authName" placeholder="e.g. Divyajyoti Mishra" autocomplete="name"/>
+          </div>
+        </div>
 
+        <div class="aform-group" style="display: flex; gap: 12px;">
+          <div style="flex: 1;">
+            <label class="aform-label">Course</label>
+            <select class="aform-input" id="authCourse" style="padding-left: 12px;">
+              <option value="" disabled selected>Select...</option>
+              <option value="BCA">BCA</option>
+              <option value="B.Tech">B.Tech</option>
+              <option value="BBA">BBA</option>
+              <option value="MCA">MCA</option>
+            </select>
+          </div>
+          <div style="flex: 1;">
+            <label class="aform-label">Year</label>
+            <select class="aform-input" id="authYear" style="padding-left: 12px;">
+              <option value="" disabled selected>Select...</option>
+              <option value="1st Year">1st Year</option>
+              <option value="2nd Year">2nd Year</option>
+              <option value="3rd Year">3rd Year</option>
+              <option value="4th Year">4th Year</option>
+            </select>
+          </div>
+        </div>
         <div class="auth-error" id="step1Error" style="display:none"></div>
 
         <button class="aform-submit" id="sendOtpBtn" type="button">

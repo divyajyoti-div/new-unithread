@@ -79,9 +79,16 @@ function goToStep(n) {
 /* ═══════════════════════════════════════════════════════════════
    STEP 1 — SEND OTP
 ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   STEP 1 — SEND OTP (WITH WAITLIST LOGIC)
+═══════════════════════════════════════════════════════════════ */
 async function handleSendOtp() {
   const email = ($("authEmail")?.value || "").trim().toLowerCase();
   const regNo = ($("authRegNo")?.value || "").trim();
+  const name = ($("authName")?.value || "").trim();
+  const course = $("authCourse")?.value || "";
+  const year = $("authYear")?.value || "";
+
   setError("step1Error", "");
 
   if (!email)               { setError("step1Error", "Please enter your email address."); return; }
@@ -91,6 +98,59 @@ async function handleSendOtp() {
   setLoading("sendOtpBtn", true);
 
   try {
+    // 🚨 1. THE GATEKEEPER & WAITLIST LOGIC 🚨
+    if (db) {
+      const { data: student, error: fetchError } = await db
+        .from('allowed_students')
+        .select('*')
+        .eq('email', email)
+        .eq('reg_no', regNo)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      // SCENARIO A: Student is NOT in database -> Add to Waitlist!
+      if (!student) {
+        // Force them to fill out the extra fields if they are new
+        if (!name || !course || !year) {
+          setLoading("sendOtpBtn", false);
+          setError("step1Error", "⚠️ New Registration: Please fill out your Name, Course, and Year.");
+          return;
+        }
+
+        const { error: insertError } = await db.from('allowed_students').insert([{
+          email: email,
+          reg_no: regNo,
+          name: name,
+          course: course,
+          year: year,
+          is_approved: false // Pending Admin Approval
+        }]);
+        
+        if (insertError) throw insertError;
+
+        setLoading("sendOtpBtn", false);
+        closeModal();
+        showToast("success", "📝 Access request sent! Please wait for an Admin to approve you.", 8000);
+        
+        // Clear the form
+        $("authEmail").value = ""; $("authRegNo").value = ""; $("authName").value = ""; 
+        $("authCourse").value = ""; $("authYear").value = "";
+        return; 
+      }
+
+      // SCENARIO B: Student IS in database, but Admin hasn't approved them yet
+      // ... (Keep the rest of your existing function exactly the same from here down!)
+
+      // SCENARIO B: Student IS in database, but Admin hasn't approved them yet
+      if (student.is_approved === false) {
+        setLoading("sendOtpBtn", false);
+        setError("step1Error", "⏳ Your account is pending Admin approval. Check back later!");
+        return;
+      }
+    }
+
+    // 🚨 2. SCENARIO C: Student IS approved -> Send the OTP! 🚨
     const res = await fetch("/api/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -121,8 +181,8 @@ async function handleSendOtp() {
     startResendTimer(60);
 
   } catch (err) {
-    console.error("send-otp fetch error:", err);
-    setError("step1Error", "Could not reach server. Make sure npm run dev is running.");
+    console.error("send-otp error:", err);
+    setError("step1Error", "Could not verify identity. Please try again.");
     setLoading("sendOtpBtn", false);
   }
 }
