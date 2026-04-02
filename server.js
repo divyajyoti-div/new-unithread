@@ -491,4 +491,6 @@ app.listen(PORT, () => {
     Feed     → http://localhost:${PORT}/feed
   `);
 });
+/* ── PLUGINS ─────────────────────────────────────────── */
+require('./leaderboard_api')(app, adminDb);
 module.exports = app;
