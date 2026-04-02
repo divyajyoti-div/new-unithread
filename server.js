@@ -472,8 +472,8 @@ app.delete("/api/admin/users/:id", async (req, res) => {
   }
 });
 /* ── HTML routes ──────────────────────────────────────────── */
-app.get("/",        (req, res) => serveFile("landing.html", res));
-app.get("/feed",    (req, res) => serveFile("index.html",   res));
+app.get("/",        (req, res) => serveFile("index.html", res));
+app.get("/feed",    (req, res) => serveFile("feed.html",   res));
 
 /* ── Static files ─────────────────────────────────────────── */
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
