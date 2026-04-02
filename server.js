@@ -491,3 +491,4 @@ app.listen(PORT, () => {
     Feed     → http://localhost:${PORT}/feed
   `);
 });
+module.exports = app;
