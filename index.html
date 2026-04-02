@@ -4,517 +4,282 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>UniThread — Your Campus, Your Voice</title>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="landing.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-<header class="navbar" id="navbar">
-  <div class="nav-left">
-    <button class="hamburger" id="menuToggle"><span></span><span></span><span></span></button>
-    <a class="logo" href="#" id="logoHome"><span class="logo-icon"></span>Uni<span class="logo-accent">Thread</span></a>
-  </div>
-  <div class="search-wrap">
-    <span class="search-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
-    <input type="text" id="searchInput" class="search-input" placeholder="Search posts…" autocomplete="off"/>
-  </div>
-  <div class="nav-right">
-    <button class="theme-toggle" id="themeToggle">
-      <span class="theme-ico sun"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></span>
-      <span class="theme-ico moon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></span>
-      <span class="toggle-thumb"></span>
-    </button>
-    <button class="btn-create" id="btnCreate" style="display:none">+ Create Post</button>
-    
-    <button class="btn-ghost" id="navMessagesBtnTop" style="display:none; padding: 8px 14px; font-size: 0.85rem; border-color: var(--border-2);">💬 Messages</button>
-    
-    <div class="user-menu" id="userMenu" style="display:none">
-      <button class="avatar-btn" id="avatarBtn">
-        <img src="" alt="" class="nav-avatar" id="navAvatar"/>
-        <span class="nav-online-dot"></span>
+  <!-- NAVBAR -->
+  <nav class="lnav">
+    <a class="logo" href="#">
+      <span class="logo-icon"></span>
+      Uni<span class="logo-accent">Thread</span>
+    </a>
+    <div class="lnav-right">
+      <button class="lbtn-primary" id="navGetAccess">Get Access</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        Verified students only — your campus stays safe
+      </div>
+      <h1 class="hero-title">
+        Your campus.<br/>
+        <span class="gradient-text">Your voice.</span><br/>
+        Unfiltered.
+      </h1>
+      <p class="hero-sub">
+        The anonymous forum built for university life. Share resources, discuss
+        exams, find lost items, and connect with your batch — gated by your
+        student registration number so only real students get in.
+      </p>
+      <div class="hero-cta">
+        <button class="lbtn-primary lbtn-lg" id="heroGetAccess">
+          Verify &amp; Enter
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+      <div class="hero-social-proof">
+        <div class="proof-avatars">
+          <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix&backgroundColor=6366f1" alt=""/>
+          <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Maya&backgroundColor=8b5cf6" alt=""/>
+          <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Ravi&backgroundColor=06b6d4" alt=""/>
+          <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Priya&backgroundColor=10b981" alt=""/>
+          <span class="proof-more">+11k</span>
+        </div>
+        <p>Join verified students from your campus</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="features-inner">
+      <p class="section-eyebrow">Why UniThread?</p>
+      <h2 class="section-title">Built for your campus.<br/>Locked to your campus.</h2>
+      <div class="feat-grid">
+        <div class="feat-card feat-highlight">
+          <div class="feat-ico">🔐</div>
+          <h3>Registration-Gated Access</h3>
+          <p>Only students with a valid registration number in our database can join. No outsiders, no spam, ever.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-ico">📧</div>
+          <h3>OTP Verification</h3>
+          <p>A one-time password is sent directly to your registered email. No passwords to remember or forget.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-ico">🕵️</div>
+          <h3>Post Anonymously</h3>
+          <p>Your identity is verified once at login. After that, every post can be anonymous if you choose.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-ico">📚</div>
+          <h3>Resource Vault</h3>
+          <p>Notes, PDFs, past papers — all from verified batchmates. Stop hunting across 12 WhatsApp groups.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-ico">🏆</div>
+          <h3>Points</h3>
+          <p>Your helpful answers build your reputation. Top contributors get featured on the leaderboard.</p>
+        </div>
+        <div class="feat-card">
+          <div class="feat-ico">🔍</div>
+          <h3>Lost &amp; Found</h3>
+          <p>Post lost items and the whole campus sees it instantly — faster than any notice board.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-inner">
+      <div class="orb orb-cta"></div>
+      <h2 class="cta-title">Ready to join your campus?</h2>
+      <p class="cta-sub">You'll need your registered email and registration number.</p>
+      <button class="lbtn-primary lbtn-lg" id="ctaGetAccess">
+        Verify your identity
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
-      <div class="profile-drop" id="profileDrop">
-        <div class="pdrop-header">
-          <img src="" alt="" class="pdrop-avatar" id="pdropAvatar"/>
-          <div class="pdrop-info">
-            <span class="pdrop-name" id="pdropName">Loading…</span>
-            <span class="pdrop-handle" id="pdropHandle">u/—</span>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="lfooter">
+    <span class="logo" style="font-size:1.1rem">
+      <span class="logo-icon" style="width:20px;height:20px;border-radius:6px"></span>
+      Uni<span class="logo-accent">Thread</span>
+    </span>
+    <span style="color:var(--text-3);font-size:0.8rem">© 2026 UniThread · Access granted to verified students</span>
+  </footer>
+
+  <!-- ══════════════ AUTH MODAL — 3 STEPS ══════════════ -->
+  <div class="modal-backdrop" id="authModalBackdrop">
+    <div class="auth-modal" id="authModal">
+
+      <button class="auth-close" id="closeAuthModal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <div class="auth-brand">
+        <span class="logo-icon"></span>
+        Uni<span class="logo-accent">Thread</span>
+      </div>
+
+
+
+      <!-- ── STEP 1: Email + Reg No ── -->
+      <div class="auth-panel" id="step1Panel">
+        <h2 class="step-title">Student Verification</h2>
+        <p class="auth-sub">Enter your registered email and registration number to receive an OTP.</p>
+
+        <div class="aform-group">
+          <label class="aform-label">Registered Email Address</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <input type="email" class="aform-input has-icon" id="authEmail"
+              placeholder="yourname@university.edu"
+              autocomplete="email"/>
           </div>
         </div>
-        <div class="pdrop-stats">
-          <div class="pdrop-stat"><span class="pdrop-val" id="pdropPoints">0</span><span class="pdrop-lbl">Points</span></div>
-          <div class="pdrop-stat-div"></div>
-          <div class="pdrop-stat"><span class="pdrop-val pdrop-sm" id="pdropCourse">—</span><span class="pdrop-lbl">Course</span></div>
-          <div class="pdrop-stat-div"></div>
-          <div class="pdrop-stat"><span class="pdrop-val pdrop-sm" id="pdropYear">—</span><span class="pdrop-lbl">Year</span></div>
+
+        <div class="aform-group">
+          <label class="aform-label">Registration Number</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <input type="text" class="aform-input has-icon" id="authRegNo"
+              placeholder="e.g. 2100123"
+              autocomplete="off"
+              autocorrect="off" autocapitalize="off"/>
+          </div>
+          <span class="aform-hint">Exactly as it appears on your ID card</span>
         </div>
-        <div class="pdrop-div"></div>
-        <button class="pdrop-item" id="btnViewProfile">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          View Profile
-        </button>
-        <button class="pdrop-item" id="btnAdminPanel" style="display:none">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          Admin Panel <span class="pdrop-admin-tag">Admin</span>
-        </button>
-        <div class="pdrop-div"></div>
-        <button class="pdrop-item pdrop-red" id="btnLogout">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-          Log out
-        </button>
-      </div>
-    </div>
-  </div>
-</header>
-
-<aside class="sidebar" id="sidebar">
-  <div class="sidebar-inner">
-  <ul class="sb-list">
-    <li class="sb-item active" data-cat="all">🏠 All Posts</li>
-  </ul>
-  <div class="sb-divider"></div>
-    <p class="sb-label">Communities</p>
-    <ul class="sb-list">
-      <li class="sb-item" data-cat="bca">💻 BCA/COMP SC.</li>
-      <li class="sb-item" data-cat="engineering">📊 BBA/MBA</li>
-      <li class="sb-item" data-cat="mba">📒 BCOM</li>
-      <li class="sb-item" data-cat="resources">📚 Resource Vault</li>
-    </ul>
-    <div class="sb-divider"></div>
-    <p class="sb-label">Campus Life</p>
-    <ul class="sb-list">
-      <li class="sb-item" data-cat="canteen">🍔 Canteen</li>
-      <li class="sb-item" data-cat="exams">📝 Exam Prep</li>
-      <li class="sb-item" data-cat="sports">🏀 Sports & Events</li>
-      <li class="sb-item" data-cat="lost">🔍 Lost &amp; Found</li>
-      <li class="sb-item" data-cat="marketplace">🛒 Marketplace</li>
-    </ul>
-  </div>
-</aside>
-<div class="sidebar-overlay" id="sidebarOverlay"></div>
-
-<main class="main" id="pageFeed">
-  <div class="sort-bar">
-    <div class="sort-pills">
-      <button class="sort-btn active" data-sort="hot">🔥 Hot</button>
-      <button class="sort-btn" data-sort="new">🕐 New</button>
-      <button class="sort-btn" data-sort="top">📈 Top</button>
-    </div>
-    <span class="post-count" id="postCount">loading…</span>
-  </div>
-  <div class="empty-state" id="emptyState" style="display:none">
-    <div style="font-size:2.5rem;margin-bottom:12px">🔭</div>
-    <h3>No posts found</h3><p>Try a different search or category</p>
-  </div>
-  <div class="feed" id="feed"></div>
-</main>
-
-<main class="main" id="pageDetail" style="display:none">
-  <button class="back-btn" id="backBtn">← Back to feed</button>
-  <div id="detailPostWrap"></div>
-  <div class="comments-section" id="commentsSection">
-    <div class="comments-header">
-      <h3 class="comments-title" id="commentsTitle">Comments</h3>
-      <div class="comment-sort-pills">
-        <button class="csort-btn active" data-csort="top">Top</button>
-        <button class="csort-btn" data-csort="new">New</button>
-      </div>
-    </div>
-    <div class="new-comment-box" id="newCommentBox" style="display:none">
-      <img src="" alt="" class="comment-composer-avatar" id="composerAvatar"/>
-      <div class="comment-composer-body">
-        <textarea class="comment-textarea" id="commentInput" placeholder="What are your thoughts?" rows="3"></textarea>
-        <div class="comment-composer-footer">
-          <label class="anon-check"><input type="checkbox" id="commentAnonCheck"/><span class="check-box"></span><span>🕵️ Anonymous</span></label>
-          <button class="btn-post-comment" id="submitComment" disabled>Comment</button>
-        </div>
-      </div>
-    </div>
-    <div id="commentsList"></div>
-    <div id="commentsLoading" style="display:none;padding:20px;color:var(--text-3);text-align:center">Loading comments…</div>
-  </div>
-</main>
-
-<main class="main" id="pageProfile" style="display:none">
-  <button class="back-btn" id="backFromProfile">← Back to feed</button>
-  <div class="pf-wrap">
-    <div class="pf-hero">
-      <div class="pf-av-zone">
-        <img src="" alt="" class="pf-avatar" id="pfAvatar"/>
-        <button class="pf-av-edit" id="pfAvatarEditBtn" title="Change avatar">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-      </div>
-      <div class="pf-identity">
-        <h2 class="pf-uname" id="pfUsername">u/—</h2>
-        <span class="pf-email" id="pfEmail">—</span>
-        <span class="pf-badge">✓ Verified Student</span>
-      </div>
-    </div>
-    <div class="pf-stats">
-      <div class="pf-stat"><span class="pf-stat-val" id="pfPoints">0</span><span class="pf-stat-lbl">Total Points</span></div>
-      <div class="pf-stat-sep"></div>
-      <div class="pf-stat"><span class="pf-stat-val" id="pfPostsN">0</span><span class="pf-stat-lbl">Posts</span></div>
-      <div class="pf-stat-sep"></div>
-      <div class="pf-stat"><span class="pf-stat-val" id="pfJoined">—</span><span class="pf-stat-lbl">Joined</span></div>
-    </div>
-    <div class="pf-section" id="pfAvatarSection" style="display:none">
-      <p class="pf-section-title">Choose your avatar style</p>
-      
-      <button class="btn-ghost" id="btnUploadCustomAvatar" style="width: 100%; margin-bottom: 15px; border-color: var(--brand); color: var(--brand);">
-        📁 Upload Picture from Device
-      </button>
-      <input type="file" id="customAvatarInput" accept="image/*" style="display:none;" />
-      <div class="pf-av-grid" id="pfAvGrid"></div>
-      <button class="pf-cancel-btn" id="pfCancelAvatar">Cancel</button>
-    </div>
-    
-    <div class="pf-fields">
-      <div class="pf-field">
-        <label class="pf-lbl">Display Name <small style="color:var(--text-3)">(Set by Admin)</small></label>
-        <input class="pf-inp" id="pfDisplayName" disabled style="opacity:0.5; cursor:not-allowed;" placeholder="Your name"/>
-      </div>
-      <div class="pf-field">
-        <label class="pf-lbl">Course / Major <small style="color:var(--text-3)">(Set by Admin)</small></label>
-        <input class="pf-inp" id="pfCourse" disabled style="opacity:0.5; cursor:not-allowed;" placeholder="e.g. BCA, B.Tech"/>
-      </div>
-      <div class="pf-field">
-        <label class="pf-lbl">Year <small style="color:var(--text-3)">(Set by Admin)</small></label>
-        <select class="pf-inp" id="pfYear" disabled style="opacity:0.5; cursor:not-allowed;">
-          <option value="">Select year</option>
-          <option>1st Year</option>
-          <option>2nd Year</option>
-          <option>3rd Year</option>
-          <option>4th Year</option>
-        </select>
-      </div>
-      <div class="pf-field">
-        <label class="pf-lbl">Email <small style="color:var(--text-3)">(cannot change)</small></label>
-        <input class="pf-inp" id="pfEmailField" disabled style="opacity:0.4;cursor:not-allowed"/>
-      </div>
-    </div>
-    
-    <div class="pf-save-row">
-      <span class="pf-msg" id="pfMsg"></span>
-      <button class="pf-save" id="pfSaveBtn">Save Changes</button>
-    </div>
-  </div>
-</main>
-
-<main class="main create-main" id="pageCreate" style="display:none">
-
-  <div class="cp-header">
-    <h1 class="cp-title">Create post</h1>
-    <button class="cp-drafts-btn" id="cpDraftsBtn">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Drafts <span class="cp-drafts-count" id="cpDraftsCount">0</span>
-    </button>
-  </div>
-
-  <div class="cp-author-row">
-    <img src="" alt="" class="cp-author-avatar" id="postAsAvatar"/>
-    <span class="cp-author-name" id="postAsName">u/—</span>
-    <label class="anon-check" style="margin-left:auto">
-      <input type="checkbox" id="anonCheck"/>
-      <span class="check-box"></span>
-      <span>Post anonymously</span>
-    </label>
-  </div>
-
-  <div class="cp-community-row">
-    <label class="cp-field-lbl">Community</label>
-    <select class="cp-select" id="postCategory">
-      <option value="bca">💻 BCA/COMP SC.</option>
-      <option value="engineering">📊 BBA/MBA</option>
-      <option value="mba">📒 BCOM</option>
-      <option value="resources">📚 Resource Vault</option>
-      <option value="canteen">🍔 Canteen Reviews</option>
-      <option value="exams">📝 Exam Prep</option>
-      <option value="sports">🏀 Sports &amp; Events</option>
-      <option value="placement">🛒 Marketplace</option>
-    </select>
-  </div>
-
-  <div class="cp-tabs">
-    <button class="cp-tab active" data-tab="text">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Text
-    </button>
-    <button class="cp-tab" data-tab="media">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-      Images &amp; Video
-    </button>
-    <button class="cp-tab" data-tab="link">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-      Link
-    </button>
-    <button class="cp-tab" data-tab="poll">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-      Poll
-    </button>
-  </div>
-
-  <div class="cp-content">
-
-    <div class="cp-title-field">
-      <input type="text" class="cp-title-input" id="postTitle" placeholder="Title*" maxlength="300"/>
-      <span class="cp-title-count" id="titleCount">0/300</span>
-    </div>
-
-    <div class="cp-tags-row" id="cpTagsRow">
-      <div class="cp-tags-wrap" id="cpTagsWrap">
-        <span class="cp-tag-placeholder" id="cpTagPlaceholder">Add tags</span>
-        <div class="cp-tags-list" id="cpTagsList"></div>
-        <input type="text" class="cp-tag-input" id="cpTagInput" placeholder="" maxlength="20"/>
-      </div>
-    </div>
-
-    <div class="cp-panel" id="panelText">
-      <div class="rte-toolbar">
-        <button class="rte-btn" data-cmd="bold"         title="Bold"><b>B</b></button>
-        <button class="rte-btn" data-cmd="italic"       title="Italic"><i>i</i></button>
-        <button class="rte-btn" data-cmd="strikethrough" title="Strikethrough"><s>S</s></button>
-        <div class="rte-sep"></div>
-        <button class="rte-btn" data-cmd="createLink"   title="Link" id="rteLink">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-        </button>
-        <div class="rte-sep"></div>
-        <button class="rte-btn" data-cmd="insertUnorderedList" title="Bullet list">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>
-        </button>
-        <button class="rte-btn" data-cmd="insertOrderedList" title="Numbered list">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
-        </button>
-        <button class="rte-btn" data-cmd="formatBlock" data-val="blockquote" title="Quote">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
-        </button>
-        <button class="rte-btn" data-cmd="formatBlock" data-val="pre" title="Code">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-        </button>
-      </div>
-      <div class="rte-editor" id="rteEditor" contenteditable="true" data-placeholder="Text (optional)"></div>
-    </div>
-
-    <div class="cp-panel" id="panelMedia" style="display:none">
-      <div class="cp-upload-zone" id="cpUploadZone">
-        <input type="file" id="cpFileInput" accept="image/*,video/*" multiple style="display:none"/>
-        <div class="cp-upload-inner" id="cpUploadInner">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <p class="cp-upload-hint">Drag &amp; drop images or videos here</p>
-          <p class="cp-upload-sub">or</p>
-          <button class="cp-upload-btn" id="cpUploadBtn">Browse files</button>
-          <p class="cp-upload-types">PNG, JPG, GIF, MP4, MOV · Max 50MB</p>
-        </div>
-        <div class="cp-media-preview" id="cpMediaPreview"></div>
-      </div>
-    </div>
-
-    <div class="cp-panel" id="panelLink" style="display:none">
-      <div class="cp-link-field">
-        <label class="cp-field-lbl">URL</label>
-        <div class="cp-link-input-wrap">
-          <svg class="cp-link-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          <input type="url" class="cp-inp" id="postLink" placeholder="https://…"/>
-        </div>
-      </div>
-      <div class="cp-link-preview" id="cpLinkPreview" style="display:none">
-        <div class="cp-link-prev-inner">
-          <span class="cp-link-prev-ico">🔗</span>
-          <div>
-            <p class="cp-link-prev-url" id="cpLinkPrevUrl"></p>
+<div class="aform-group">
+          <label class="aform-label">Full Name</label>
+          <div class="input-icon-wrap">
+            <svg class="input-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" class="aform-input has-icon" id="authName" placeholder="e.g. Divyajyoti Mishra" autocomplete="name"/>
           </div>
         </div>
-      </div>
-    </div>
 
-    <div class="cp-panel" id="panelPoll" style="display:none">
-      <div class="cp-poll-options" id="cpPollOptions">
-        <div class="cp-poll-option">
-          <input type="text" class="cp-inp" placeholder="Option 1" maxlength="60"/>
-          <button class="cp-poll-remove" style="visibility:hidden">✕</button>
+        <div class="aform-group" style="display: flex; gap: 12px;">
+          <div style="flex: 1;">
+            <label class="aform-label">Course</label>
+            <select class="aform-input" id="authCourse" style="padding-left: 12px;">
+              <option value="" disabled selected>Select...</option>
+              <option value="BCA">BCA</option>
+              <option value="B.Tech">B.Tech</option>
+              <option value="BBA">BBA</option>
+              <option value="MCA">MCA</option>
+            </select>
+          </div>
+          <div style="flex: 1;">
+            <label class="aform-label">Year</label>
+            <select class="aform-input" id="authYear" style="padding-left: 12px;">
+              <option value="" disabled selected>Select...</option>
+              <option value="1st Year">1st Year</option>
+              <option value="2nd Year">2nd Year</option>
+              <option value="3rd Year">3rd Year</option>
+              <option value="4th Year">4th Year</option>
+            </select>
+          </div>
         </div>
-        <div class="cp-poll-option">
-          <input type="text" class="cp-inp" placeholder="Option 2" maxlength="60"/>
-          <button class="cp-poll-remove" style="visibility:hidden">✕</button>
+        <div class="auth-error" id="step1Error" style="display:none"></div>
+
+        <button class="aform-submit" id="sendOtpBtn" type="button">
+          <span class="btn-label">Send OTP to my email</span>
+          <span class="btn-spinner" style="display:none">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          </span>
+        </button>
+
+        <p class="auth-note">
+          🔒 Only students pre-registered by your institution can access UniThread.
+          Contact your admin if you face issues.
+        </p>
+      </div>
+
+      <!-- ── STEP 2: OTP Entry ── -->
+      <div class="auth-panel" id="step2Panel" style="display:none">
+        <h2 class="step-title">Check Your Email</h2>
+        <p class="auth-sub" id="step2Sub">We sent a 6-digit OTP to your email.</p>
+
+        <!-- Email display -->
+        <div class="otp-sent-to" id="otpSentTo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          <span id="otpEmailDisplay"></span>
         </div>
-      </div>
-      <button class="cp-add-option-btn" id="cpAddOption">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add option
-      </button>
-      <div class="cp-poll-duration">
-        <label class="cp-field-lbl">Poll duration</label>
-        <select class="cp-select" id="cpPollDuration">
-          <option value="1">1 day</option>
-          <option value="3" selected>3 days</option>
-          <option value="7">7 days</option>
-          <option value="14">14 days</option>
-        </select>
-      </div>
-    </div>
 
-  </div>
-  <div class="cp-footer">
-    <button class="cp-save-draft-btn" id="cpSaveDraftBtn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-      Save Draft
-    </button>
-    <div style="display:flex;gap:10px">
-      <button class="btn-ghost" id="cancelCreate">Cancel</button>
-      <button class="btn-submit" id="submitPost">Post</button>
-    </div>
-  </div>
-
-  <div class="cp-drafts-drawer" id="cpDraftsDrawer" style="display:none">
-    <div class="cp-drafts-hdr">
-      <h3>Saved Drafts</h3>
-      <button class="modal-x" id="cpDraftsClose">✕</button>
-    </div>
-    <div class="cp-drafts-list" id="cpDraftsList">
-      <p class="cp-drafts-empty">No drafts saved yet.</p>
-    </div>
-  </div>
-
-</main>
-
-<main class="main" id="pagePublicProfile" style="display:none">
-  <button class="back-btn" id="backFromPublicProfile">← Back</button>
-  <div class="pf-wrap">
-    <div class="pf-hero">
-      <div class="pf-av-zone">
-        <img src="" alt="" class="pf-avatar" id="pubAvatar"/>
-      </div>
-      <div class="pf-identity">
-        <h2 class="pf-uname" id="pubUsername">u/—</h2>
-        <span class="pf-badge">✓ Verified Student</span>
-      </div>
-    </div>
-    <div class="pf-stats">
-      <div class="pf-stat"><span class="pf-stat-val" id="pubCourse">—</span><span class="pf-stat-lbl">Course</span></div>
-      <div class="pf-stat-sep"></div>
-      <div class="pf-stat"><span class="pf-stat-val" id="pubYear">—</span><span class="pf-stat-lbl">Year</span></div>
-    </div>
-    <div class="pf-save-row" style="justify-content: center; background: var(--bg-mid);">
-      <button class="btn-submit" id="btnMessageUser">💬 Message User</button>
-    </div>
-  </div>
-</main>
-
-<main class="main" id="pageAdmin" style="display:none; max-width: 1000px; margin: 0 auto;">
-  <button class="back-btn" id="backFromAdmin">← Back to feed</button>
-  <div class="cp-header" style="margin-bottom: 20px;">
-    <h1 class="cp-title">🛡️ Admin Dashboard</h1>
-  </div>
-  
-  <div class="cp-tabs">
-    <button class="cp-tab active" data-atab="users">👥 Manage Users</button>
-    <button class="cp-tab" data-atab="posts">📝 Moderate Posts</button>
-  </div>
-
-  <div class="cp-panel" id="adminPanelUsers">
-    <div style="margin-bottom: 15px;">
-      <h3 style="margin: 0;">Pending Access Requests</h3>
-      <p style="color: var(--text-3); font-size: 0.9rem;">Review and approve students before they can log in.</p>
-    </div>
-    <div style="overflow-x: auto; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Reg No</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Course / Year</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="adminUsersList">
-          <tr><td colspan="5" style="text-align:center; padding: 20px;">Loading requests...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="cp-panel" id="adminPanelPosts" style="display:none">
-    <div style="overflow-x: auto; background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-lg);">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Author</th>
-            <th>Upvotes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="adminPostsList">
-          <tr><td colspan="4" style="text-align:center; padding: 20px;">Loading posts...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</main>
-
-<main class="main chat-main" id="pageChat" style="display:none">
-  <div class="chat-container">
-    
-    <div class="chat-sidebar">
-      <div class="chat-header">
-        <h3>Messages</h3>
-        <button class="btn-ghost" style="padding: 4px 10px; font-size: 0.8rem;" id="btnNewGroup">+ Group</button>
-      </div>
-      <div class="chat-list" id="chatList">
-        <p style="padding:20px; color:var(--text-3); text-align:center; font-size:0.85rem;">No conversations yet.</p>
-      </div>
-    </div>
-    
-    <div class="chat-window" id="chatWindow" style="display:none;">
-      
-      <div class="chat-window-header">
-        <button class="back-btn chat-back" id="chatBackBtn" style="margin:0; padding:4px 8px; display:none;">←</button>
-        <img src="" alt="" class="chat-active-avatar" id="chatActiveAvatar"/>
-        <div style="flex: 1; display:flex; flex-direction:column; gap:2px;">
-          <h3 id="chatActiveName" style="color:var(--text-1); margin: 0;">Loading...</h3>
-          <span id="chatActiveUsername" style="font-size:0.75rem; color:var(--text-3);">—</span>
+        <!-- OTP boxes -->
+        <div class="otp-single-wrap">
+          <input class="otp-single-input" id="otpSingleInput"
+            type="text" inputmode="numeric" pattern="[0-9]*"
+            maxlength="6" placeholder="Enter 6-digit OTP" autocomplete="one-time-code"/>
         </div>
-        
-        <button class="btn-ghost" id="btnAddMember" style="display:none; padding:4px 10px; font-size:0.8rem;">+ Add Member</button>
 
-        <button class="avatar-btn" id="btnGroupMenuToggle" style="display:none; color: var(--text-3); font-size:1.1rem">⋮</button>
-        
-        <div class="edit-group-menu" id="editGroupMenu">
-          <button class="group-menu-item" id="btnChangeGroupPic">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Change Group Photo
-          </button>
-          <div class="pdrop-div"></div>
-          <button class="group-menu-item pdrop-red" id="btnDeleteGroup">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Delete Group
-          </button>
+        <!-- Countdown timer -->
+        <div class="otp-timer" id="otpTimer">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          OTP expires in <span id="timerCount">10:00</span>
         </div>
+
+        <div class="auth-error" id="step2Error" style="display:none"></div>
+
+        <button class="aform-submit" id="verifyOtpBtn" type="button">
+          <span class="btn-label">Verify &amp; Enter</span>
+          <span class="btn-spinner" style="display:none">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="spin"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+          </span>
+        </button>
+
+        <button class="aform-resend" id="resendOtpBtn" type="button" disabled>
+          Didn't receive it? <span>Resend OTP</span>
+        </button>
+
+        <button class="aform-back" id="backToStep1Btn" type="button">
+          ← Change email / reg number
+        </button>
       </div>
-      
-      <div class="chat-messages" id="chatMessagesVertical"></div>
-      
-      <div class="chat-input-area">
-        <input type="text" class="chat-input" id="chatInputMsg" placeholder="Type a message..." autocomplete="off"/>
-        <button class="btn-submit chat-send" id="chatSendBtn">Send</button>
+
+      <!-- ── STEP 3: Success ── -->
+      <div class="auth-panel auth-success-panel" id="step3Panel" style="display:none">
+        <div class="success-animation">
+          <div class="success-circle">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+        </div>
+        <h2 class="step-title">Access Granted! 🎉</h2>
+        <p class="auth-sub" id="welcomeMsg">Welcome to UniThread!</p>
+        <div class="student-info-card" id="studentInfoCard">
+          <div class="sic-row"><span class="sic-label">Name</span><span class="sic-val" id="sicName">—</span></div>
+          <div class="sic-row"><span class="sic-label">Course</span><span class="sic-val" id="sicCourse">—</span></div>
+          <div class="sic-row"><span class="sic-label">Year</span><span class="sic-val" id="sicYear">—</span></div>
+          <div class="sic-row"><span class="sic-label">Reg No.</span><span class="sic-val" id="sicRegNo">—</span></div>
+        </div>
+        <button class="aform-submit" id="enterFeedBtn" type="button">
+          Enter the Feed →
+        </button>
       </div>
-      
+
     </div>
-    
-    <div class="chat-empty" id="chatEmptyState">
-      <div style="font-size:3rem; margin-bottom:10px;">💬</div>
-      <h3 style="color:var(--text-1);">Your Messages</h3>
-      <p style="color:var(--text-3); font-size:0.9rem;">Select a conversation or start a new one from a user's profile.</p>
-    </div>
-    
   </div>
-</main>
-<input type="file" id="groupPicInput" accept="image/*" style="display:none;" />
-<div class="toast-container" id="toastContainer"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<input type="file" id="profilePicInput" accept="image/*" style="display:none;" />
-<script src="app.js"></script>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="landing.js"></script>
 </body>
 </html>

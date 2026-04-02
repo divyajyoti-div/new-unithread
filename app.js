@@ -8,7 +8,7 @@ const SB_OK   = !!(
   !SB_URL.includes("YOUR_") && !SB_ANON.includes("YOUR_")
 );
 const IS_LIVE = [5500,5501,5502,5503].includes(+location.port);
-const LAND    = IS_LIVE ? "landing.html" : "/";
+const LAND = "index.html";
 
 let db = null;
 try {
@@ -2165,14 +2165,14 @@ document.addEventListener("click", async (e) => {
         await db.auth.signOut();
       }
       // 2. Kick them back to the login screen
-      window.location.replace("landing.html"); 
+      window.location.replace("index.html"); 
       
     } catch (err) {
       console.error("Supabase logout error:", err);
       // 3. THE NUCLEAR OPTION: Nuke the browser storage anyway
       localStorage.clear();
       sessionStorage.clear();
-      window.location.replace("landing.html");
+      window.location.replace("index.html");
     }
   }
 });
