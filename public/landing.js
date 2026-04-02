@@ -15,7 +15,7 @@ const SUPABASE_READY = !!(
 );
 
 const IS_LIVE_SERVER = [5500,5501,5502,5503].includes(+location.port);
-const FEED_URL = "feed.html";
+const FEED_URL = "/feed";
 
 /* Only init Supabase client if credentials are present */
 let db = null;
