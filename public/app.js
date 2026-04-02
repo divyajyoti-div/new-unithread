@@ -8,7 +8,7 @@ const SB_OK   = !!(
   !SB_URL.includes("YOUR_") && !SB_ANON.includes("YOUR_")
 );
 const IS_LIVE = [5500,5501,5502,5503].includes(+location.port);
-const LAND = "index.html";
+const LAND = "/";
 
 let db = null;
 try {
