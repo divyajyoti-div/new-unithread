@@ -66,6 +66,7 @@ body {
 .logo-accent {
   background: linear-gradient(120deg, var(--accent-bright), var(--spark));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-left: -8px
 }
 
 /* ── BUTTONS ── */
