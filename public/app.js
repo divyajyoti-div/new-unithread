@@ -318,14 +318,24 @@ async function fetchPosts() {
 }
 
 async function insertPost(post) {
-  if (!SB_OK || state.usingMock) return { ...post, id: Date.now(), created_at: new Date().toISOString(), comment_count: 0 };
+  if (!SB_OK || state.usingMock) return { ...post, id: Date.now(), created_at: new Date().toISOString(), comments: [], upvotes: 0 };
+  
   try {
     const { data, error } = await db.from("posts").insert([post]).select().single();
     if (error) throw error;
-    return data;
-  } catch(e) { showToast("error", "❌ " + e.message); return null; }
-}
 
+    // --- NEW: AWARD 5 POINTS FOR POSTING ---
+    if (state.user && state.user.id) {
+        await awardPoints(state.user.id, 5);
+    }
+    // ---------------------------------------
+
+    return data;
+  } catch(e) { 
+    showToast("error", "❌ " + e.message); 
+    return null; 
+  }
+}
 async function loadUserVotes() {
   if (!SB_OK) return;
   
@@ -431,6 +441,16 @@ async function handlePostVote(id, dir) {
 
   // Pass the exact math to the database so it doesn't have to guess
   await castVote({ postId: id, dir, prevVote: prev, newTotal: post.upvotes });
+  // --- NEW: AWARD POINTS FOR UPVOTES ---
+  // If the user just clicked "up" (and isn't undoing a previous upvote)
+  if (dir === "up" && prev !== "up") {
+      // Make sure we know who wrote the post
+      if (post.author_id) {
+          await awardPoints(post.author_id, 1);
+      } else {
+          console.log("Could not award point: No author_id attached to this post.");
+      }
+  }
 }
 
 async function handleCommentVote(id, dir) {
@@ -2264,6 +2284,19 @@ setTimeout(() => {
     }
   });
 }, 1000);
+// --- POINT REWARD SYSTEM ---
+async function awardPoints(userId, amountToAdd) {
+    if (!userId) return;
+    try {
+        const { data: user } = await db.from("users").select("points").eq("id", userId).single();
+        const currentPoints = user?.points || 0;
+        const newTotal = currentPoints + amountToAdd;
+        await db.from("users").update({ points: newTotal }).eq("id", userId);
+        console.log(`✅ Awarded ${amountToAdd} points! New total: ${newTotal}`);
+    } catch (err) {
+        console.error("🚨 Failed to award points:", err);
+    }
+}
 // --- LEADERBOARD LOGIC ---
 async function fetchAndRenderLeaderboard() {
     try {
