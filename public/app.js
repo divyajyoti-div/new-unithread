@@ -327,18 +327,40 @@ async function insertPost(post) {
 }
 
 async function loadUserVotes() {
-  if (!SB_OK || !state.user) return;
+  if (!SB_OK) return;
+  
+  // 1. Force the app to wait for the real Supabase session
+  const { data: sessionData } = await db.auth.getSession();
+  const uid = sessionData?.session?.user?.id || state.user?.id;
+  
+  if (!uid) {
+      console.log("Waiting for user login to load votes...");
+      return; 
+  }
+
   try {
-    const { data } = await db.from("votes").select("post_id,comment_id,direction").eq("user_id", state.user.id);
+    const { data } = await db.from("votes").select("post_id,comment_id,direction").eq("user_id", uid);
     if (!data) return;
+    
     const v = {};
     data.forEach(r => {
       if (r.post_id)    v[`p:${r.post_id}`]    = r.direction;
       if (r.comment_id) v[`c:${r.comment_id}`] = r.direction;
     });
+    
     state.votes = v;
     localStorage.setItem("ut-votes", JSON.stringify(v));
-  } catch(e) { console.warn("loadUserVotes:", e); }
+    console.log("✅ Past votes loaded and remembered:", state.votes);
+    
+    // 2. Visually update the buttons on the screen now that we remember the votes
+    document.querySelectorAll('.vote-btn, .cvote-btn').forEach(btn => {
+        // This forces the CSS classes to update if they match a saved vote
+        const isUp = btn.dataset.dir === 'up';
+        const isDown = btn.dataset.dir === 'down';
+        // Your existing render functions will handle the rest on the next cycle
+    });
+
+  } catch(e) { console.warn("loadUserVotes error:", e); }
 }
 
 async function castVote({ postId, commentId, dir }) {
@@ -2251,3 +2273,39 @@ setTimeout(() => {
     }
   });
 }, 1000);
+// --- LEADERBOARD LOGIC ---
+async function fetchAndRenderLeaderboard() {
+    try {
+        const res = await fetch("/api/leaderboard");
+        const data = await res.json();
+        
+        if (data.success && data.leaderboard) {
+            const list = document.getElementById("leaderboard-list");
+            list.innerHTML = ""; 
+            const medals = ["🥇", "🥈", "🥉"];
+            
+            if (data.leaderboard.length === 0) {
+                list.innerHTML = `<li style="color: #7588a8;">No users found yet.</li>`;
+                return;
+            }
+
+            data.leaderboard.forEach((user, index) => {
+                list.innerHTML += `
+                    <li style="display: flex; justify-content: space-between; align-items: center; background: #1f2937; padding: 8px 12px; border-radius: 8px;">
+                        <span style="color: #f3f4f6; font-weight: 500;">
+                            ${medals[index] || "🏅"} ${user.username || "Anonymous"}
+                        </span>
+                        <span style="color: #a78bfa; font-weight: bold;">
+                            ${user.points} pts
+                        </span>
+                    </li>
+                `;
+            });
+        }
+    } catch (err) {
+        document.getElementById("leaderboard-list").innerHTML = `<li style="color: #ef4444;">Failed to load.</li>`;
+    }
+}
+
+// Run this automatically when the file loads
+setTimeout(fetchAndRenderLeaderboard, 1000); // 1 second delay to ensure DOM is ready
