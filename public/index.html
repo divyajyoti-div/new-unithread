@@ -14,8 +14,7 @@
   <!-- NAVBAR -->
   <nav class="lnav">
     <a class="logo" href="#">
-      <span class="logo-icon"></span>
-      Uni<span class="logo-accent">Thread</span>
+      <span class="logo-icon"></span>Uni<span class="logo-accent">Thread</span>
     </a>
     <div class="lnav-right">
       <button class="lbtn-primary" id="navGetAccess">Get Access</button>
@@ -120,8 +119,7 @@
   <!-- FOOTER -->
   <footer class="lfooter">
     <span class="logo" style="font-size:1.1rem">
-      <span class="logo-icon" style="width:20px;height:20px;border-radius:6px"></span>
-      Uni<span class="logo-accent">Thread</span>
+      <span class="logo-icon" style="width:20px;height:20px;border-radius:6px"></span>Uni<span class="logo-accent">Thread</span>
     </span>
     <span style="color:var(--text-3);font-size:0.8rem">© 2026 UniThread · Access granted to verified students</span>
   </footer>
@@ -135,8 +133,7 @@
       </button>
 
       <div class="auth-brand">
-        <span class="logo-icon"></span>
-        Uni<span class="logo-accent">Thread</span>
+        <span class="logo-icon"></span>Uni<span class="logo-accent">Thread</span>
       </div>
 
 
@@ -281,5 +278,18 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="landing.js"></script>
+  <div id="leaderboard-mount" style="position: fixed; bottom: 24px; right: 24px; width: 320px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px;"></div>
+    
+    <script src="leaderboard.js"></script>
+    
+</body> ```
+
+### Why this works so well:
+* **`position: fixed; bottom: 24px; right: 24px;`** tells your website to literally pick up the leaderboard and pin it 24 pixels away from the bottom right corner of the screen.
+* **`z-index: 1000;`** ensures the leaderboard floats *on top* of the posts, so it doesn't accidentally get hidden behind the feed.
+* **`width: 320px;`** keeps it looking like a neat little widget instead of stretching across the screen.
+* **`box-shadow`** adds a cool dark shadow behind it so it pops off the background and looks like a professional floating panel.
+
+Just paste that right above `</body>`, save, commit to GitHub, and your leaderboard will be perfectly docked in the corner!
 </body>
 </html>
