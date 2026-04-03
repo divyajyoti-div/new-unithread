@@ -363,62 +363,40 @@ async function loadUserVotes() {
   } catch(e) { console.warn("loadUserVotes error:", e); }
 }
 
-async function castVote({ postId, commentId, dir }) {
-  if (!SB_OK) return; // Removed the usingMock blocker!
+async function castVote({ postId, commentId, dir, prevVote, newTotal }) {
+  if (!SB_OK) return;
 
-  // 1. Force fetch the real user ID directly from Supabase session
   const { data: sessionData } = await db.auth.getSession();
   const uid = sessionData?.session?.user?.id || state.user?.id;
 
   if (!uid) {
-    console.error("🚨 Cannot vote: No user ID found. Are you logged in?");
+    console.error("🚨 Cannot vote: No user ID found.");
     return;
   }
 
-  const key   = postId ? `p:${postId}` : `c:${commentId}`;
-  const prev  = state.votes[key] || null;
   const idVal = postId || commentId;
   const col   = postId ? "post_id" : "comment_id";
   const tbl   = postId ? "posts" : "comments";
 
   try {
-    console.log(`Saving vote to DB... Target ID: ${idVal}, Dir: ${dir}`);
-
-    // 2. Update the tracking 'votes' table
-    if (prev === dir) {
-      delete state.votes[key];
+    // 1. Log the vote in the tracking table so users can't vote twice
+    if (prevVote === dir) {
       await db.from("votes").delete().eq("user_id", uid).eq(col, idVal);
-    } else if (prev) {
-      state.votes[key] = dir;
+    } else if (prevVote) {
       await db.from("votes").update({ direction: dir }).eq("user_id", uid).eq(col, idVal);
     } else {
-      state.votes[key] = dir;
       await db.from("votes").insert([{ user_id: uid, direction: dir, [col]: idVal }]);
     }
 
-    localStorage.setItem("ut-votes", JSON.stringify(state.votes));
-
-    // 3. Update the total score in the 'posts' table
-    const { data: row } = await db.from(tbl).select("upvotes").eq("id", idVal).single();
-
-    if (row) {
-      let d = 0;
-      if (prev === dir) d = dir === "up" ? -1 : 1;
-      else { if (prev) d += prev === "up" ? -1 : 1; d += dir === "up" ? 1 : -1; }
-
-      // Use (row.upvotes || 0) just in case the database column is null
-      const newTotal = Math.max(0, (row.upvotes || 0) + d);
-
-      const { error: updateErr } = await db.from(tbl).update({ upvotes: newTotal }).eq("id", idVal);
-
-      if (updateErr) {
-         console.error("🚨 Failed to update post total in database:", updateErr);
-      } else {
-         console.log("✅ Vote saved permanently! New total:", newTotal);
-      }
+    // 2. Save the final number directly to the posts/comments table
+    const { error } = await db.from(tbl).update({ upvotes: newTotal }).eq("id", idVal);
+    
+    if (error) {
+        console.error(`🚨 Failed to update ${tbl} total:`, error);
     }
-  } catch(e) { 
-    console.error("🚨 castVote crashed completely:", e); 
+
+  } catch(e) {
+    console.error("🚨 DB Vote Error:", e);
   }
 }
 
@@ -426,43 +404,56 @@ async function castVote({ postId, commentId, dir }) {
 async function handlePostVote(id, dir) {
   const post = state.posts.find(p => p.id === id); if (!post) return;
   const key  = `p:${id}`;
-  const prev = state.votes[key] || null;
+  const prev = state.votes[key] || null; // Capture the real previous vote
   let d = 0;
+
   if (prev === dir) { d = dir === "up" ? -1 : 1; delete state.votes[key]; }
   else { if (prev) d += prev === "up" ? -1 : 1; d += dir === "up" ? 1 : -1; state.votes[key] = dir; }
+
   post.upvotes = Math.max(0, post.upvotes + d);
   localStorage.setItem("ut-votes", JSON.stringify(state.votes));
 
+  // Visual UI Updates
   [`score-${id}`, `dscore-${id}`].forEach(sid => {
     const el = $(sid);
     if (el) { el.textContent = fmt(post.upvotes); el.className = `vote-score${post.upvotes > 400 ? " hot" : ""}`; }
   });
   const card = $("feed")?.querySelector(`[data-id="${id}"]`);
   if (card) {
-    card.querySelector('[data-dir="up"]').className   = `vote-btn${state.votes[key] === "up"   ? " upvoted"   : ""}`;
-    card.querySelector('[data-dir="down"]').className = `vote-btn${state.votes[key] === "down" ? " downvoted" : ""}`;
+    const upBtn = card.querySelector('[data-dir="up"]');
+    const downBtn = card.querySelector('[data-dir="down"]');
+    if (upBtn) upBtn.className   = `vote-btn${state.votes[key] === "up"   ? " upvoted"   : ""}`;
+    if (downBtn) downBtn.className = `vote-btn${state.votes[key] === "down" ? " downvoted" : ""}`;
   }
   const du = $(`dvup-${id}`),  dd = $(`dvdown-${id}`);
   if (du) du.className = `vote-btn${state.votes[key] === "up"   ? " upvoted"   : ""}`;
   if (dd) dd.className = `vote-btn${state.votes[key] === "down" ? " downvoted" : ""}`;
-  await castVote({ postId: id, dir });
+
+  // Pass the exact math to the database so it doesn't have to guess
+  await castVote({ postId: id, dir, prevVote: prev, newTotal: post.upvotes });
 }
 
 async function handleCommentVote(id, dir) {
   const c = state.comments.find(x => x.id === id); if (!c) return;
   const key  = `c:${id}`;
-  const prev = state.votes[key] || null;
+  const prev = state.votes[key] || null; // Capture the real previous vote
   let d = 0;
+
   if (prev === dir) { d = dir === "up" ? -1 : 1; delete state.votes[key]; }
   else { if (prev) d += prev === "up" ? -1 : 1; d += dir === "up" ? 1 : -1; state.votes[key] = dir; }
+
   c.upvotes = Math.max(0, c.upvotes + d);
   c.userVote = state.votes[key] || null;
   localStorage.setItem("ut-votes", JSON.stringify(state.votes));
+  
+  // Visual UI Updates
   const sc = $(`cscore-${id}`); if (sc) sc.textContent = fmt(c.upvotes);
   const ub = $(`cvup-${id}`),  db2 = $(`cvdown-${id}`);
   if (ub)  ub.className  = `cvote-btn${c.userVote === "up"   ? " upvoted"   : ""}`;
   if (db2) db2.className = `cvote-btn${c.userVote === "down" ? " downvoted" : ""}`;
-  await castVote({ commentId: id, dir });
+
+  // Pass the exact math to the database
+  await castVote({ commentId: id, dir, prevVote: prev, newTotal: c.upvotes });
 }
 
 /* ─── Comments ─── */
