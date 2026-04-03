@@ -2,7 +2,7 @@
 /* ─── Config injected by server.js ─── */
 const _cfg = window.__UNITHREAD_CONFIG__ || {};
 const SB_URL  ="https://fwskgymssszhoksjtpzk.supabase.co"
-const SB_ANON ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3c2tneW1zc3N6aG9rc2p0cHprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0OTQyODcsImV4cCI6MjA4OTA3MDI4N30.vuAuonWQnIaTrnUYQ9CSIzx-LrKqOH5ZxHtDZTA3rYA"
+const SB_ANON =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3c2tneW1zc3N6aG9rc2p0cHprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0OTQyODcsImV4cCI6MjA4OTA3MDI4N30.vuAuonWQnIaTrnUYQ9CSIzx-LrKqOH5ZxHtDZTA3rYA
 const SB_OK   = !!(
   _cfg.configured && SB_URL.startsWith("https://") &&
   !SB_URL.includes("YOUR_") && !SB_ANON.includes("YOUR_")
@@ -342,13 +342,27 @@ async function loadUserVotes() {
 }
 
 async function castVote({ postId, commentId, dir }) {
-  if (!SB_OK || state.usingMock) return;
-  const uid = state.user?.id; if (!uid) return;
-  const key  = postId ? `p:${postId}` : `c:${commentId}`;
-  const prev = state.votes[key] || null;
+  if (!SB_OK) return; // Removed the usingMock blocker!
+
+  // 1. Force fetch the real user ID directly from Supabase session
+  const { data: sessionData } = await db.auth.getSession();
+  const uid = sessionData?.session?.user?.id || state.user?.id;
+
+  if (!uid) {
+    console.error("🚨 Cannot vote: No user ID found. Are you logged in?");
+    return;
+  }
+
+  const key   = postId ? `p:${postId}` : `c:${commentId}`;
+  const prev  = state.votes[key] || null;
   const idVal = postId || commentId;
   const col   = postId ? "post_id" : "comment_id";
+  const tbl   = postId ? "posts" : "comments";
+
   try {
+    console.log(`Saving vote to DB... Target ID: ${idVal}, Dir: ${dir}`);
+
+    // 2. Update the tracking 'votes' table
     if (prev === dir) {
       delete state.votes[key];
       await db.from("votes").delete().eq("user_id", uid).eq(col, idVal);
@@ -359,16 +373,31 @@ async function castVote({ postId, commentId, dir }) {
       state.votes[key] = dir;
       await db.from("votes").insert([{ user_id: uid, direction: dir, [col]: idVal }]);
     }
+
     localStorage.setItem("ut-votes", JSON.stringify(state.votes));
-    const tbl = postId ? "posts" : "comments";
+
+    // 3. Update the total score in the 'posts' table
     const { data: row } = await db.from(tbl).select("upvotes").eq("id", idVal).single();
+
     if (row) {
       let d = 0;
       if (prev === dir) d = dir === "up" ? -1 : 1;
       else { if (prev) d += prev === "up" ? -1 : 1; d += dir === "up" ? 1 : -1; }
-      await db.from(tbl).update({ upvotes: Math.max(0, row.upvotes + d) }).eq("id", idVal);
+
+      // Use (row.upvotes || 0) just in case the database column is null
+      const newTotal = Math.max(0, (row.upvotes || 0) + d);
+
+      const { error: updateErr } = await db.from(tbl).update({ upvotes: newTotal }).eq("id", idVal);
+
+      if (updateErr) {
+         console.error("🚨 Failed to update post total in database:", updateErr);
+      } else {
+         console.log("✅ Vote saved permanently! New total:", newTotal);
+      }
     }
-  } catch(e) { console.warn("castVote:", e); }
+  } catch(e) { 
+    console.error("🚨 castVote crashed completely:", e); 
+  }
 }
 
 /* ─── Voting ─── */
