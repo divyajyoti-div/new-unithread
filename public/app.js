@@ -2,7 +2,7 @@
 /* ─── Config injected by server.js ─── */
 const _cfg = window.__UNITHREAD_CONFIG__ || {};
 const SB_URL  ="https://fwskgymssszhoksjtpzk.supabase.co"
-const SB_ANON =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3c2tneW1zc3N6aG9rc2p0cHprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0OTQyODcsImV4cCI6MjA4OTA3MDI4N30.vuAuonWQnIaTrnUYQ9CSIzx-LrKqOH5ZxHtDZTA3rYA
+const SB_ANON ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3c2tneW1zc3N6aG9rc2p0cHprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0OTQyODcsImV4cCI6MjA4OTA3MDI4N30.vuAuonWQnIaTrnUYQ9CSIzx-LrKqOH5ZxHtDZTA3rYA"
 const SB_OK   = !!(
   _cfg.configured && SB_URL.startsWith("https://") &&
   !SB_URL.includes("YOUR_") && !SB_ANON.includes("YOUR_")
