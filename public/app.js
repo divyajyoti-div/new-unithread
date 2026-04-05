@@ -2103,48 +2103,74 @@ async function updateGroupPictureInDb(newAvatarUrl) {
   }
 }
 // --- ADD MEMBER TO CHAT LOGIC ---
-const addMemberModalBd = document.getElementById("addMemberModalBd");
-const btnAddMember = document.getElementById("btnAddMember"); 
-const closeAddMemberBtn = document.getElementById("closeAddMemberBtn");
-const cancelAddMemberBtn = document.getElementById("cancelAddMemberBtn");
-const contactListWrap = document.getElementById("contactListWrap");
-const confirmAddMemberBtn = document.getElementById("confirmAddMemberBtn");
-
 let selectedUserToAdd = null;
 
-// 1. BULLETPROOF Open Modal Logic
 document.addEventListener("click", async (e) => {
-    const addBtn = e.target.closest("#btnAddMember");
     
+    // 1. OPEN THE MODAL
+    const addBtn = e.target.closest("#btnAddMember");
     if (addBtn) {
-        console.log("Add Member clicked! Current Chat ID:", currentChatId);
-        
-        // Use the correct variable: currentChatId
         if (!currentChatId) {
-            console.error("No active chat ID found. Cannot add member.");
             alert("Error: Please select a chat first.");
             return; 
         }
-        
         const modal = document.getElementById("addMemberModalBd");
         if (modal) {
             modal.style.display = "flex";
-            await loadContactsForAdd();
+            await loadContactsForAdd(); // Fetch the users!
+        }
+        return;
+    }
+
+    // 2. CLOSE THE MODAL (X button or Cancel button)
+    const closeBtn = e.target.closest("#closeAddMemberBtn") || e.target.closest("#cancelAddMemberBtn");
+    if (closeBtn) {
+        document.getElementById("addMemberModalBd").style.display = "none";
+        selectedUserToAdd = null;
+        
+        const confirmBtn = document.getElementById("confirmAddMemberBtn");
+        if(confirmBtn) confirmBtn.disabled = true;
+        return;
+    }
+
+    // 3. CONFIRM AND SAVE NEW MEMBER
+    const confirmBtn = e.target.closest("#confirmAddMemberBtn");
+    if (confirmBtn) {
+        if (!selectedUserToAdd || !currentChatId) return;
+        
+        confirmBtn.innerText = "Adding...";
+        
+        try {
+            const { error } = await db.from("participants").insert([
+                { conversation_id: currentChatId, user_id: selectedUserToAdd }
+            ]);
+            
+            if (error) throw error;
+            
+            if (typeof showToast === "function") showToast("success", "✅ Member added to the chat!");
+            else alert("Member added successfully!");
+            
+            document.getElementById("addMemberModalBd").style.display = "none";
+            selectedUserToAdd = null;
+            
+        } catch (err) {
+            console.error("Add member error:", err);
+            if (typeof showToast === "function") showToast("error", "❌ Could not add member.");
+        } finally {
+            confirmBtn.innerText = "Add to Group";
+            confirmBtn.disabled = true;
         }
     }
 });
 
-// 2. Logic to close the modal
-function closeAddMemberModal() {
-    addMemberModalBd.style.display = "none";
-    selectedUserToAdd = null;
-    confirmAddMemberBtn.disabled = true;
-}
-if (closeAddMemberBtn) closeAddMemberBtn.addEventListener("click", closeAddMemberModal);
-if (cancelAddMemberBtn) cancelAddMemberBtn.addEventListener("click", closeAddMemberModal);
-
-// 3. Fetch users from Supabase to show in the list
+// 4. FETCH USERS ENGINE
 async function loadContactsForAdd() {
+    // Look for the box RIGHT NOW, ensuring it's never null
+    const contactListWrap = document.getElementById("contactListWrap");
+    const confirmAddMemberBtn = document.getElementById("confirmAddMemberBtn");
+    
+    if (!contactListWrap) return; 
+    
     contactListWrap.innerHTML = `<p style="text-align:center; color:var(--text-4); padding: 20px 0;">Loading...</p>`;
     
     try {
@@ -2170,10 +2196,12 @@ async function loadContactsForAdd() {
             div.innerHTML = `<strong>${name}</strong>`;
             
             div.onclick = () => {
+                // Clear highlighting from all users
                 Array.from(contactListWrap.children).forEach(child => child.style.background = "transparent");
+                // Highlight the selected one
                 div.style.background = "var(--accent-subtle)";
                 selectedUserToAdd = u.id;
-                confirmAddMemberBtn.disabled = false;
+                if (confirmAddMemberBtn) confirmAddMemberBtn.disabled = false;
             };
             
             contactListWrap.appendChild(div);
@@ -2182,41 +2210,6 @@ async function loadContactsForAdd() {
         console.error("Error loading contacts:", err);
         contactListWrap.innerHTML = `<p style="color:var(--red); text-align:center; padding: 20px 0;">Failed to load contacts.</p>`;
     }
-}
-
-// 4. Save the new member to the database
-if (confirmAddMemberBtn) {
-    confirmAddMemberBtn.addEventListener("click", async () => {
-        // Use the correct variable here too!
-        if (!selectedUserToAdd || !currentChatId) return;
-        
-        confirmAddMemberBtn.innerText = "Adding...";
-        
-        try {
-            // Using the correct table and column names
-            const { error } = await db.from("participants").insert([
-                { conversation_id: currentChatId, user_id: selectedUserToAdd }
-            ]);
-            
-            if (error) throw error;
-            
-            if (typeof showToast === "function") {
-                showToast("success", "✅ Member added to the chat!");
-            } else {
-                alert("Member added successfully!");
-            }
-            
-            closeAddMemberModal();
-            
-        } catch (err) {
-            console.error("Add member error:", err);
-            if (typeof showToast === "function") {
-                showToast("error", "❌ Could not add member.");
-            }
-        } finally {
-            confirmAddMemberBtn.innerText = "Add to Group";
-        }
-    });
 }
 /* ═══════════════════════════════════════════════════════════════
    ADMIN DASHBOARD LOGIC
