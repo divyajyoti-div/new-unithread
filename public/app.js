@@ -2112,16 +2112,31 @@ const confirmAddMemberBtn = document.getElementById("confirmAddMemberBtn");
 
 let selectedUserToAdd = null;
 
-// 1. Open the modal when "+ Add Member" is clicked
-if (btnAddMember) {
-    btnAddMember.addEventListener("click", async () => {
-        // Double check they are actually inside a chat window
-        if (!state.activeChatId) return; 
+// 1. BULLETPROOF Open Modal Logic
+document.addEventListener("click", async (e) => {
+    // Check if what they clicked was the Add Member button (or an icon inside it)
+    const addBtn = e.target.closest("#btnAddMember");
+    
+    if (addBtn) {
+        console.log("Add Member clicked! Current Chat ID:", state.activeChatId);
         
-        addMemberModalBd.style.display = "flex";
-        await loadContactsForAdd();
-    });
-}
+        // Prevent silent failures! If there's no chat ID, tell the user.
+        if (!state.activeChatId) {
+            console.error("No active chat ID found. Cannot add member.");
+            alert("Error: Please select a chat first.");
+            return; 
+        }
+        
+        // Grab the modal and open it
+        const modal = document.getElementById("addMemberModalBd");
+        if (modal) {
+            modal.style.display = "flex";
+            await loadContactsForAdd();
+        } else {
+            console.error("Could not find the modal HTML. Did you paste it in feed.html?");
+        }
+    }
+});
 
 // 2. Logic to close the modal
 function closeAddMemberModal() {
