@@ -524,5 +524,24 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <input type="file" id="profilePicInput" accept="image/*" style="display:none;" />
 <script src="app.js"></script>
+<div class="modal-bd" id="addMemberModalBd" style="display:none; z-index: 2000;">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 class="modal-title">Add Member to Chat</h2>
+      <button class="modal-x" id="closeAddMemberBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: var(--text-3); font-size: 0.9rem; margin-bottom: 12px;">Select someone to add to this conversation:</p>
+      
+      <div id="contactListWrap" style="max-height: 250px; overflow-y: auto; background: var(--bg-mid); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px;">
+        <p style="text-align:center; color:var(--text-4); font-size: 0.85rem; padding: 20px 0;">Loading contacts...</p>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-ghost" id="cancelAddMemberBtn">Cancel</button>
+      <button class="btn-submit" id="confirmAddMemberBtn" disabled>Add to Group</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

@@ -2102,6 +2102,114 @@ async function updateGroupPictureInDb(newAvatarUrl) {
     showToast("error", "Server connection failed.");
   }
 }
+// --- ADD MEMBER TO CHAT LOGIC ---
+const addMemberModalBd = document.getElementById("addMemberModalBd");
+const btnAddMember = document.getElementById("btnAddMember"); 
+const closeAddMemberBtn = document.getElementById("closeAddMemberBtn");
+const cancelAddMemberBtn = document.getElementById("cancelAddMemberBtn");
+const contactListWrap = document.getElementById("contactListWrap");
+const confirmAddMemberBtn = document.getElementById("confirmAddMemberBtn");
+
+let selectedUserToAdd = null;
+
+// 1. Open the modal when "+ Add Member" is clicked
+if (btnAddMember) {
+    btnAddMember.addEventListener("click", async () => {
+        // Double check they are actually inside a chat window
+        if (!state.activeChatId) return; 
+        
+        addMemberModalBd.style.display = "flex";
+        await loadContactsForAdd();
+    });
+}
+
+// 2. Logic to close the modal
+function closeAddMemberModal() {
+    addMemberModalBd.style.display = "none";
+    selectedUserToAdd = null;
+    confirmAddMemberBtn.disabled = true;
+}
+if (closeAddMemberBtn) closeAddMemberBtn.addEventListener("click", closeAddMemberModal);
+if (cancelAddMemberBtn) cancelAddMemberBtn.addEventListener("click", closeAddMemberModal);
+
+// 3. Fetch users from Supabase to show in the list
+async function loadContactsForAdd() {
+    contactListWrap.innerHTML = `<p style="text-align:center; color:var(--text-4); padding: 20px 0;">Loading...</p>`;
+    
+    try {
+        // Fetch users (excluding the person currently logged in)
+        const { data: users, error } = await db.from("users")
+            .select("id, raw_user_meta_data, email")
+            .neq("id", state.user.id);
+
+        if (error) throw error;
+
+        if (!users || users.length === 0) {
+            contactListWrap.innerHTML = `<p style="text-align:center; color:var(--text-4); padding: 20px 0;">No contacts found.</p>`;
+            return;
+        }
+
+        contactListWrap.innerHTML = ""; // Clear the loading text
+
+        // Build a clickable row for each user
+        users.forEach(u => {
+            const name = u.raw_user_meta_data?.name || u.email || "Anonymous Student";
+            
+            const div = document.createElement("div");
+            div.className = "group-menu-item"; 
+            div.style.borderBottom = "1px solid var(--border)";
+            div.innerHTML = `<strong>${name}</strong>`;
+            
+            // When a user clicks a name, highlight it in purple and enable the "Add" button
+            div.onclick = () => {
+                Array.from(contactListWrap.children).forEach(child => child.style.background = "transparent");
+                div.style.background = "var(--accent-subtle)";
+                selectedUserToAdd = u.id;
+                confirmAddMemberBtn.disabled = false;
+            };
+            
+            contactListWrap.appendChild(div);
+        });
+    } catch (err) {
+        console.error("Error loading contacts:", err);
+        contactListWrap.innerHTML = `<p style="color:var(--red); text-align:center; padding: 20px 0;">Failed to load contacts.</p>`;
+    }
+}
+
+// 4. Save the new member to the database when they click "Add to Group"
+if (confirmAddMemberBtn) {
+    confirmAddMemberBtn.addEventListener("click", async () => {
+        if (!selectedUserToAdd || !state.activeChatId) return;
+        
+        confirmAddMemberBtn.innerText = "Adding...";
+        
+        try {
+            // Important: Tell Supabase to link this user to the current chat ID
+            // Important: Tell Supabase to link this user to the current chat ID
+const { error } = await db.from("participants").insert([
+    { conversation_id: state.activeChatId, user_id: selectedUserToAdd }
+]);
+            if (error) throw error;
+            
+            // If you have a toast notification system, trigger it!
+            if (typeof showToast === "function") {
+                showToast("success", "✅ Member added to the chat!");
+            } else {
+                alert("Member added successfully!");
+            }
+            
+            closeAddMemberModal();
+            
+        } catch (err) {
+            console.error("Add member error:", err);
+            if (typeof showToast === "function") {
+                showToast("error", "❌ Could not add member.");
+            }
+        } finally {
+            confirmAddMemberBtn.innerText = "Add to Group";
+        }
+    });
+}
 /* ═══════════════════════════════════════════════════════════════
    ADMIN DASHBOARD LOGIC
 ═══════════════════════════════════════════════════════════════ */
