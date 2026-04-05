@@ -108,6 +108,14 @@
     <h3>No posts found</h3><p>Try a different search or category</p>
   </div>
   <div class="feed" id="feed"></div>
+
+  <div id="leaderboard-container" style="position: fixed; bottom: 24px; right: 24px; width: 320px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px; background: #111827; border: 1px solid #243352; padding: 16px;">
+      <h3 style="color: #a78bfa; font-weight: bold; margin-top: 0; margin-bottom: 12px;">🏆 Top Scorers</h3>
+      <ul id="leaderboard-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+          <li style="color: #7588a8; font-size: 0.9rem;">Loading leaderboard...</li>
+      </ul>
+  </div>
+
 </main>
 
 <main class="main" id="pageDetail" style="display:none">
@@ -516,11 +524,5 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <input type="file" id="profilePicInput" accept="image/*" style="display:none;" />
 <script src="app.js"></script>
-<div id="leaderboard-container" style="position: fixed; bottom: 24px; right: 24px; width: 320px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px; background: #111827; border: 1px solid #243352; padding: 16px;">
-    <h3 style="color: #a78bfa; font-weight: bold; margin-top: 0; margin-bottom: 12px;">🏆 Top Scorers</h3>
-    <ul id="leaderboard-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
-        <li style="color: #7588a8; font-size: 0.9rem;">Loading leaderboard...</li>
-    </ul>
-</div>
 </body>
 </html>
