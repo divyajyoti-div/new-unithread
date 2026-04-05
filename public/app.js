@@ -2119,7 +2119,7 @@ document.addEventListener("click", async (e) => {
     
     if (addBtn) {
         console.log("Add Member clicked! Current Chat ID:", state.activeChatId);
-        
+        console.log("Let's look at the whole state:", state);
         // Prevent silent failures! If there's no chat ID, tell the user.
         if (!state.activeChatId) {
             console.error("No active chat ID found. Cannot add member.");
