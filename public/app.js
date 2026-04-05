@@ -2114,26 +2114,22 @@ let selectedUserToAdd = null;
 
 // 1. BULLETPROOF Open Modal Logic
 document.addEventListener("click", async (e) => {
-    // Check if what they clicked was the Add Member button (or an icon inside it)
     const addBtn = e.target.closest("#btnAddMember");
     
     if (addBtn) {
-        console.log("Add Member clicked! Current Chat ID:", state.activeChatId);
-        console.log("Let's look at the whole state:", state);
-        // Prevent silent failures! If there's no chat ID, tell the user.
-        if (!state.activeChatId) {
+        console.log("Add Member clicked! Current Chat ID:", currentChatId);
+        
+        // Use the correct variable: currentChatId
+        if (!currentChatId) {
             console.error("No active chat ID found. Cannot add member.");
             alert("Error: Please select a chat first.");
             return; 
         }
         
-        // Grab the modal and open it
         const modal = document.getElementById("addMemberModalBd");
         if (modal) {
             modal.style.display = "flex";
             await loadContactsForAdd();
-        } else {
-            console.error("Could not find the modal HTML. Did you paste it in feed.html?");
         }
     }
 });
@@ -2152,7 +2148,6 @@ async function loadContactsForAdd() {
     contactListWrap.innerHTML = `<p style="text-align:center; color:var(--text-4); padding: 20px 0;">Loading...</p>`;
     
     try {
-        // Fetch users (excluding the person currently logged in)
         const { data: users, error } = await db.from("users")
             .select("id, raw_user_meta_data, email")
             .neq("id", state.user.id);
@@ -2164,9 +2159,8 @@ async function loadContactsForAdd() {
             return;
         }
 
-        contactListWrap.innerHTML = ""; // Clear the loading text
+        contactListWrap.innerHTML = "";
 
-        // Build a clickable row for each user
         users.forEach(u => {
             const name = u.raw_user_meta_data?.name || u.email || "Anonymous Student";
             
@@ -2175,7 +2169,6 @@ async function loadContactsForAdd() {
             div.style.borderBottom = "1px solid var(--border)";
             div.innerHTML = `<strong>${name}</strong>`;
             
-            // When a user clicks a name, highlight it in purple and enable the "Add" button
             div.onclick = () => {
                 Array.from(contactListWrap.children).forEach(child => child.style.background = "transparent");
                 div.style.background = "var(--accent-subtle)";
@@ -2191,22 +2184,22 @@ async function loadContactsForAdd() {
     }
 }
 
-// 4. Save the new member to the database when they click "Add to Group"
+// 4. Save the new member to the database
 if (confirmAddMemberBtn) {
     confirmAddMemberBtn.addEventListener("click", async () => {
-        if (!selectedUserToAdd || !state.activeChatId) return;
+        // Use the correct variable here too!
+        if (!selectedUserToAdd || !currentChatId) return;
         
         confirmAddMemberBtn.innerText = "Adding...";
         
         try {
-            // Important: Tell Supabase to link this user to the current chat ID
-            // Important: Tell Supabase to link this user to the current chat ID
-const { error } = await db.from("participants").insert([
-    { conversation_id: state.activeChatId, user_id: selectedUserToAdd }
-]);
+            // Using the correct table and column names
+            const { error } = await db.from("participants").insert([
+                { conversation_id: currentChatId, user_id: selectedUserToAdd }
+            ]);
+            
             if (error) throw error;
             
-            // If you have a toast notification system, trigger it!
             if (typeof showToast === "function") {
                 showToast("success", "✅ Member added to the chat!");
             } else {
