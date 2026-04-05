@@ -477,6 +477,8 @@ app.get("/feed",    (req, res) => serveFile("feed.html",   res));
 
 /* ── Static files ─────────────────────────────────────────── */
 app.use(express.static(path.join(__dirname, "public"), { index: false }));
+/* ── PLUGINS ─────────────────────────────────────────── */
+require('./leaderboard_api')(app, adminDb);
 
 /* ── 404 fallback ─────────────────────────────────────────── */
 app.use((req, res) => {
@@ -491,6 +493,4 @@ app.listen(PORT, () => {
     Feed     → http://localhost:${PORT}/feed
   `);
 });
-/* ── PLUGINS ─────────────────────────────────────────── */
-require('./leaderboard_api')(app, adminDb);
 module.exports = app;
