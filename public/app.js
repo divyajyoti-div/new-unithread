@@ -2165,7 +2165,6 @@ document.addEventListener("click", async (e) => {
 
 // 4. FETCH USERS ENGINE
 async function loadContactsForAdd() {
-    // Look for the box RIGHT NOW, ensuring it's never null
     const contactListWrap = document.getElementById("contactListWrap");
     const confirmAddMemberBtn = document.getElementById("confirmAddMemberBtn");
     
@@ -2174,8 +2173,9 @@ async function loadContactsForAdd() {
     contactListWrap.innerHTML = `<p style="text-align:center; color:var(--text-4); padding: 20px 0;">Loading...</p>`;
     
     try {
+        // FIXED: Asking for 'username' instead of 'email' or 'raw_meta_data'
         const { data: users, error } = await db.from("users")
-            .select("id, raw_user_meta_data, email")
+            .select("id, username") 
             .neq("id", state.user.id);
 
         if (error) throw error;
@@ -2188,7 +2188,8 @@ async function loadContactsForAdd() {
         contactListWrap.innerHTML = "";
 
         users.forEach(u => {
-            const name = u.raw_user_meta_data?.name || u.email || "Anonymous Student";
+            // FIXED: Look for 'username' to display
+            const name = u.username || "Anonymous Student"; 
             
             const div = document.createElement("div");
             div.className = "group-menu-item"; 
@@ -2196,9 +2197,7 @@ async function loadContactsForAdd() {
             div.innerHTML = `<strong>${name}</strong>`;
             
             div.onclick = () => {
-                // Clear highlighting from all users
                 Array.from(contactListWrap.children).forEach(child => child.style.background = "transparent");
-                // Highlight the selected one
                 div.style.background = "var(--accent-subtle)";
                 selectedUserToAdd = u.id;
                 if (confirmAddMemberBtn) confirmAddMemberBtn.disabled = false;
