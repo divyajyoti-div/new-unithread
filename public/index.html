@@ -278,18 +278,5 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="landing.js"></script>
-  <div id="leaderboard-mount" style="position: fixed; bottom: 24px; right: 24px; width: 320px; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.5); border-radius: 12px;"></div>
-    
-    <script src="leaderboard.js"></script>
-    
-</body> ```
-
-### Why this works so well:
-* **`position: fixed; bottom: 24px; right: 24px;`** tells your website to literally pick up the leaderboard and pin it 24 pixels away from the bottom right corner of the screen.
-* **`z-index: 1000;`** ensures the leaderboard floats *on top* of the posts, so it doesn't accidentally get hidden behind the feed.
-* **`width: 320px;`** keeps it looking like a neat little widget instead of stretching across the screen.
-* **`box-shadow`** adds a cool dark shadow behind it so it pops off the background and looks like a professional floating panel.
-
-Just paste that right above `</body>`, save, commit to GitHub, and your leaderboard will be perfectly docked in the corner!
-</body>
+</body> 
 </html>
