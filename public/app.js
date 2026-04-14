@@ -47,6 +47,30 @@ const state = {
 
 const $ = id => document.getElementById(id);
 const $$ = s => document.querySelectorAll(s);
+async function compressImage(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_WIDTH = 1200; // Good balance for quality/size
+                const scale = MAX_WIDTH / img.width;
+                canvas.width = MAX_WIDTH;
+                canvas.height = img.height * scale;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                canvas.toBlob((blob) => {
+                    resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                }, 'image/jpeg', 0.7); // 70% quality saves TONS of space
+            };
+        };
+    });
+}
 
 /* ─── Pages ─── */
 function showPage(p) {
@@ -1157,28 +1181,47 @@ async function deletePost(id) {
   renderFeed();
 }
 /* ─── Media files helper ─── */
-function handleMediaFiles(files) {
+/* --- Media files helper --- */
+async function handleMediaFiles(files) {  // 1. ADDED ASYNC HERE
   if (!files?.length) return;
   const preview = $("cpMediaPreview");
-  Array.from(files).forEach(file => {
-    if (cpState.mediaFiles.length >= 10) { showToast("info", "Max 10 files."); return; }
-    if (file.size > 50 * 1024 * 1024) { showToast("error", `${file.name} exceeds 50MB.`); return; }
-    cpState.mediaFiles.push(file);
+  
+  // 2. CHANGED to a 'for...of' loop so we can use 'await'
+  for (let originalFile of Array.from(files)) {
+    if (cpState.mediaFiles.length >= 10) { showToast("info", "Max 10 files."); break; }
+    
+    let fileToUse = originalFile;
+    const isVideo = originalFile.type.startsWith("video/");
+
+    // 3. THE SHRINK RAY: If it's an image, compress it before doing anything else
+    if (!isVideo && originalFile.type.startsWith("image/")) {
+        console.log(`Shrinking ${originalFile.name}...`);
+        fileToUse = await compressImage(originalFile);
+    }
+
+    if (fileToUse.size > 50 * 1024 * 1024) { showToast("error", `${fileToUse.name} exceeds 50MB.`); continue; }
+    
+    // 4. Save the SHRUNK file to your state instead of the massive original
+    cpState.mediaFiles.push(fileToUse);
+    
     const idx = cpState.mediaFiles.length - 1;
-    const url = URL.createObjectURL(file);
+    const url = URL.createObjectURL(fileToUse);
     const div = document.createElement("div");
     div.className = "cp-media-thumb";
-    const isVideo = file.type.startsWith("video/");
+    
     div.innerHTML = isVideo
-      ? `<video src="${url}" muted></video><button class="cp-media-thumb-del" data-i="${idx}">✕</button>`
-      : `<img src="${url}" alt=""/><button class="cp-media-thumb-del" data-i="${idx}">✕</button>`;
+      ? `<video src="${url}" muted></video><button class="cp-media-thumb-del" data-i="${idx}">X</button>`
+      : `<img src="${url}" alt=""/><button class="cp-media-thumb-del" data-i="${idx}">X</button>`;
+      
     div.querySelector(".cp-media-thumb-del").addEventListener("click", e => {
       e.stopPropagation();
       cpState.mediaFiles.splice(+e.currentTarget.dataset.i, 1);
       div.remove();
     });
+    
     preview?.appendChild(div);
-  });
+  }
+  
   if (preview?.children.length) {
     $("cpUploadInner").style.display = "none";
     preview.style.display = "flex";
