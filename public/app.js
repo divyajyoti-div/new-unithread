@@ -47,6 +47,21 @@ const state = {
 
 const $ = id => document.getElementById(id);
 const $$ = s => document.querySelectorAll(s);
+function formatPostBody(rawText) {
+    if (!rawText) return "";
+    
+    // 1. Protect against weird HTML injections (XSS) but keep line breaks
+    let safeText = rawText.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    safeText = safeText.replace(/\n/g, "<br>");
+
+    // 2. Translate [IMAGE:url] into actual HTML images!
+    const htmlWithImages = safeText.replace(
+        /\[IMAGE:(.*?)\]/g, 
+        '<img src="$1" style="max-width: 100%; border-radius: 8px; margin-top: 15px; margin-bottom: 15px; display: block;">'
+    );
+
+    return htmlWithImages;
+}
 async function compressImage(file) {
     return new Promise((resolve) => {
         const reader = new FileReader();
@@ -686,7 +701,7 @@ function renderDetailPost(p) {
         ${p.body && p.body.startsWith("POLL_DATA::") 
             ? renderPoll(p) 
             : p.body 
-              ? `<div class="post-excerpt" style="margin-top:8px;">${formatBody(p.body)}</div>` 
+              ? `<div style="margin-top:16px; font-size: 1.05rem; line-height: 1.6; padding-bottom: 10px;">${formatBody(p.body)}</div>` 
               : ""
         }
         
