@@ -1049,7 +1049,6 @@ function closeDraftsDrawer() {
   const d = $("cpDraftsDrawer"); if (d) d.style.display = "none";
 }
 
-/* ─── Create post submit ─── */
 async function handleSubmitPost() {
   const title = $("postTitle")?.value.trim();
   if (!title) { showToast("error", "⚠️ Please enter a title."); $("postTitle")?.focus(); return; }
@@ -1061,61 +1060,61 @@ async function handleSubmitPost() {
   let body = null;
 
   try {
-    // 1. Process content based on the active tab
-    if (tab === "text") {
-      body = $("rteEditor")?.innerText?.trim() || null;
-      const html = $("rteEditor")?.innerHTML || "";
-      if (html && html !== "<br>") body = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim() || null;
-      
-    } else if (tab === "link") {
+    // 1. ALWAYS grab the text correctly (This fixes the squished paragraphs!)
+    let typedText = "";
+    const html = $("rteEditor")?.innerHTML || "";
+    if (html && html !== "<br>") {
+        // Convert HTML line breaks into real, preserved newlines
+        let formatted = html.replace(/<p>/gi, "")
+                            .replace(/<\/p>/gi, "\n")
+                            .replace(/<br\s*\/?>/gi, "\n")
+                            .replace(/<\/div>/gi, "\n")
+                            .replace(/<div[^>]*>/gi, "");
+        typedText = formatted.replace(/<[^>]+>/g, "").trim();
+        typedText = typedText.replace(/&nbsp;/g, " "); // Keep normal spaces
+    }
+
+    // 2. Process based on what is attached
+    if (tab === "link") {
       const link = $("postLink")?.value.trim();
       if (!link) throw new Error("Please enter a valid link.");
-      body = `🔗 ${link}`;
+      body = typedText ? `🔗 ${link}\n\n${typedText}` : `🔗 ${link}`;
       
     } else if (tab === "poll") {
       const opts = Array.from($$(".cp-poll-option .cp-inp")).map(i => i.value.trim()).filter(Boolean);
       if (opts.length < 2) throw new Error("Add at least 2 poll options.");
       const dur = $("cpPollDuration")?.value || "3";
-      
-      // Save poll as a structured JSON string so we can track votes
       const pollData = {
-        isPoll: true,
-        duration: parseInt(dur),
-        createdAt: Date.now(),
+        isPoll: true, duration: parseInt(dur), createdAt: Date.now(),
         options: opts.map((optText, idx) => ({ id: idx, text: optText, votes: 0 })),
-        voters: {} // Tracks who voted for what
+        voters: {}
       };
       body = "POLL_DATA::" + JSON.stringify(pollData);
       
-    } else if (tab === "media") {
-      if (!cpState.mediaFiles.length) throw new Error("Please attach at least one image or video.");
-      
-      submitBtn.textContent = "Uploading Media…";
-      let uploadedUrls = [];
-      
-      // Upload each file to Supabase
-      for (let file of cpState.mediaFiles) {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `post_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-        
-        const { data, error } = await db.storage.from('media').upload(fileName, file);
-        if (error) throw new Error("Upload failed: " + error.message);
-        
-        const { data: urlData } = db.storage.from('media').getPublicUrl(fileName);
-        uploadedUrls.push(urlData.publicUrl);
+    } else {
+      // 3. Standard Post: Grab Images AND Text perfectly!
+      let imageTags = "";
+      if (cpState.mediaFiles.length > 0) {
+        submitBtn.textContent = "Uploading Media…";
+        let uploadedUrls = [];
+        for (let file of cpState.mediaFiles) {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `post_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+          const { error } = await db.storage.from('media').upload(fileName, file);
+          if (error) throw new Error("Upload failed: " + error.message);
+          const { data: urlData } = db.storage.from('media').getPublicUrl(fileName);
+          uploadedUrls.push(urlData.publicUrl);
+        }
+        imageTags = uploadedUrls.map(url => `[IMAGE:${url}]`).join("\n");
       }
       
-      // Store URLs as special tags
-const imageTags = uploadedUrls.map(url => `[IMAGE:${url}]`).join("\n");
-
-// NEW: Grab any text you typed in the Text tab before switching
-const typedText = $("rteEditor")?.innerText?.trim() || "";
-
-// NEW: Combine your text and the image tags!
-body = typedText ? (typedText + "\n\n" + imageTags) : imageTags;
+      if (typedText && imageTags) body = typedText + "\n\n" + imageTags;
+      else if (typedText) body = typedText;
+      else if (imageTags) body = imageTags;
+      else throw new Error("Please add some text or an image.");
     }
 
-    // 2. Gather metadata
+    // 4. Gather metadata
     const catVal   = $("postCategory")?.value || "bca";
     const catLabel = $("postCategory")?.options[$("postCategory")?.selectedIndex]?.text.replace(/^[^\s]+\s/, "") || catVal;
     const isAnon   = $("anonCheck")?.checked || false;
@@ -1123,7 +1122,7 @@ body = typedText ? (typedText + "\n\n" + imageTags) : imageTags;
     const flairMap = { bca:"", engineering:"", mba:"", resources:"flair-cyan", canteen:"flair-gold", exams:"flair-cyan", sports:"flair-green", placement:"flair-green" };
     const tags     = cpState.tags.length ? cpState.tags.join(", ") : null;
 
-    // 3. Send to Database
+    // 5. Send to Database
     const newPostData = {
       title,
       body: body || (tags ? `Tags: ${tags}` : null),
@@ -1136,13 +1135,12 @@ body = typedText ? (typedText + "\n\n" + imageTags) : imageTags;
     const created = await insertPost(newPostData);
     if (!created) throw new Error("Database insertion failed.");
 
-    // 4. Update UI
+    // 6. Update UI
     state.posts.unshift(created);
     state.votes[`p:${created.id}`] = "up";
     localStorage.setItem("ut-votes", JSON.stringify(state.votes));
     state.sort = "new";
     
-    // Clear out the form
     cpState.mediaFiles = [];
     if ($("cpMediaPreview")) $("cpMediaPreview").innerHTML = "";
     if ($("cpUploadInner")) $("cpUploadInner").style.display = "flex";
