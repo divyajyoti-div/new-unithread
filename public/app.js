@@ -1090,8 +1090,14 @@ async function handleSubmitPost() {
         uploadedUrls.push(urlData.publicUrl);
       }
       
-      // Store URLs as special tags in the text body
-      body = uploadedUrls.map(url => `[IMAGE:${url}]`).join("\n");
+      // Store URLs as special tags
+const imageTags = uploadedUrls.map(url => `[IMAGE:${url}]`).join("\n");
+
+// NEW: Grab any text you typed in the Text tab before switching
+const typedText = $("rteEditor")?.innerText?.trim() || "";
+
+// NEW: Combine your text and the image tags!
+body = typedText ? (typedText + "\n\n" + imageTags) : imageTags;
     }
 
     // 2. Gather metadata
