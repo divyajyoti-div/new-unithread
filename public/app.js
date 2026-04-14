@@ -1108,7 +1108,7 @@ async function handleSubmitPost() {
         imageTags = uploadedUrls.map(url => `[IMAGE:${url}]`).join("\n");
       }
       
-      if (typedText && imageTags) body = typedText + "\n\n" + imageTags;
+      if (typedText && imageTags) body = imageTags + "\n\n" + typedText;
       else if (typedText) body = typedText;
       else if (imageTags) body = imageTags;
       else throw new Error("Please add some text or an image.");
