@@ -202,7 +202,8 @@ function fillProfile() {
   const p  = state.profile;
   const u  = state.user;
   const un = p?.username || u?.email?.split("@")[0] || "user";
-  const av = mkAvatar(un);
+  // NEW: Check if an uploaded picture exists. If not, use the cartoon.
+  const av = p?.avatar_url ? p.avatar_url : mkAvatar(un);
   const joined = p?.joined_at
     ? new Date(p.joined_at).toLocaleDateString("en-IN", {month:"short", year:"numeric"})
     : "—";
