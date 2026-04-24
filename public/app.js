@@ -1132,7 +1132,7 @@ async function handleSubmitPost() {
       flair: catLabel, flair_class: flairMap[catVal] || "",
       category: catVal, upvotes: 1, comment_count: 0, pinned: false,
     };
-
+console.log("🚨 WIRETAP CAUGHT THIS:", newPostData.category);
     const created = await insertPost(newPostData);
     if (!created) throw new Error("Database insertion failed.");
 
