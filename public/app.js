@@ -1403,7 +1403,6 @@ function bindEvents() {
   // Create post page
   $("btnCreate")?.addEventListener("click", () => requireAuth(showCreate));
   $("cancelCreate")?.addEventListener("click", showFeed);
-  $("submitPost")?.addEventListener("click", handleSubmitPost);
   $("postTitle")?.addEventListener("input", () => {
     $("titleCount").textContent = `${$("postTitle").value.length}/300`;
   });
@@ -1509,12 +1508,6 @@ function bindEvents() {
     $("commentInput").style.height = "auto";
     $("commentInput").style.height = $("commentInput").scrollHeight + "px";
   });
-  $("submitComment")?.addEventListener("click", () => requireAuth(() => {
-    const body = $("commentInput").value.trim();
-    const isAnon = $("commentAnonCheck").checked;
-    if (!body) return;
-    submitComment(body, isAnon, null);
-  }));
   $$(".csort-btn").forEach(btn => btn.addEventListener("click", () => {
     $$(".csort-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active"); state.commentSort = btn.dataset.csort; renderComments();
@@ -1617,7 +1610,46 @@ $("backFromAdmin")?.addEventListener("click", showFeed);
       e.target.value = ""; // Reset the input so they can upload again if needed
     }
   });
+  // 🚨 THE MASTER LISTENER (EVENT DELEGATION) 🚨
+  // This acts as a security guard for your entire app. It catches clicks anywhere on the screen,
+  // checks what you clicked on, and fires the function. It never breaks, even if the UI redraves 100 times!
+  document.addEventListener("click", async (e) => {
+    
+    // 1. Did they click Submit Post?
+    if (e.target.closest("#submitPost")) {
+      e.preventDefault();
+      handleSubmitPost();
+    }
+
+    // 2. Did they click Submit Comment?
+    if (e.target.closest("#submitComment")) {
+      e.preventDefault();
+      requireAuth(() => {
+        const body = $("commentInput")?.value.trim();
+        const isAnon = $("commentAnonCheck")?.checked;
+        if (!body) return;
+        submitComment(body, isAnon, null);
+      });
+    }
+
+    // 3. Did they click Logout? (Catches any button with the ID or class)
+    const logoutBtn = e.target.closest("#btnLogout") || e.target.closest(".logout-btn");
+    if (logoutBtn) {
+      e.preventDefault();
+      logoutBtn.innerHTML = "Logging out... ⏳";
+      logoutBtn.style.pointerEvents = "none"; 
+      try {
+        if (db) await db.auth.signOut();
+        window.location.replace("/"); 
+      } catch (err) {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.replace("/");
+      }
+    }
+  });
 }
+
 
 /* ─── BOOT ─── */
 async function init() {
@@ -2429,33 +2461,6 @@ window.adminDeletePost = async function(postId) {
   await deletePost(postId);
   loadAdminPosts(); // Refresh table after deletion
 };
-// 🚨 Bulletproof Emergency Logout Fix
-document.addEventListener("click", async (e) => {
-  const logoutBtn = e.target.closest("#btnLogout");
-  if (logoutBtn) {
-    e.preventDefault();
-    console.log("Logout triggered, nuking session...");
-    
-    logoutBtn.innerHTML = "Logging out... ⏳";
-    logoutBtn.style.pointerEvents = "none"; // Stops them from clicking it twice
-
-    try {
-      // 1. Tell Supabase to kill the session
-      if (db) {
-        await db.auth.signOut();
-      }
-      // 2. Kick them back to the login screen
-      window.location.replace("index.html"); 
-      
-    } catch (err) {
-      console.error("Supabase logout error:", err);
-      // 3. THE NUCLEAR OPTION: Nuke the browser storage anyway
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.replace("index.html");
-    }
-  }
-});
 /* ─── Custom Avatar Upload Logic ─── */
 setTimeout(() => {
   // 1. Trigger the hidden file input when they click the new button
