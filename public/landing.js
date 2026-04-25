@@ -238,6 +238,28 @@ async function handleVerifyOtp() {
           access_token:  data.session.access_token,
           refresh_token: data.session.refresh_token,
         });
+        // 🚨 ADD THIS BLOCK: Sync the full name to the public users table 🚨
+      const studentData = data.student;
+      const userId = data.session.user.id;
+      
+      if (studentData && studentData.name) {
+        // First, check if a row already exists for this user
+        const { data: existingUser } = await db.from('users').select('id').eq('id', userId).maybeSingle();
+        
+        if (existingUser) {
+          // If they exist, just update their username (so we don't accidentally reset their points)
+          await db.from('users').update({ username: studentData.name }).eq('id', userId);
+        } else {
+          // If it is their very first time logging in, create their row with their Name and Course
+          await db.from('users').insert({ 
+            id: userId, 
+            username: studentData.name, 
+            course: studentData.course, 
+            points: 0 
+          });
+        }
+      }
+      // 🚨 END OF ADDED BLOCK 🚨
       } catch (e) { console.warn("setSession error:", e); }
     }
 
