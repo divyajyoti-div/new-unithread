@@ -1781,23 +1781,70 @@ async function showPublicProfile(username) {
 $("backFromPublicProfile")?.addEventListener("click", showFeed);
 
 // 5. Start a Chat
+// 5. Start a Chat (Supabase Native)
 async function startChat(targetId, targetUsername) {
-  try {
-    const res = await fetch("/api/chat/start", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ myId: state.user.id, targetId: targetId })
-    });
-    const data = await res.json();
-    
-    if (data.success) {
-      showPage("chat");
-      await loadChatList();
-      openConversation(data.conversation_id, targetUsername, mkAvatar(targetUsername));
+    try {
+        // 1. Find all conversations you are currently a part of
+        const { data: myParticipants } = await db.from("participants").select("conversation_id").eq("user_id", state.user.id);
+        const myConvIds = myParticipants ? myParticipants.map(p => p.conversation_id) : [];
+
+        let existingConvoId = null;
+
+        if (myConvIds.length > 0) {
+            // 2. See if the target user is also in any of those exact same conversations
+            const { data: commonConvos } = await db.from("participants")
+                .select("conversation_id")
+                .in("conversation_id", myConvIds)
+                .eq("user_id", targetId);
+
+            if (commonConvos && commonConvos.length > 0) {
+                const commonIds = commonConvos.map(c => c.conversation_id);
+                
+                // 3. Make sure it's a 1-on-1 chat, NOT a group chat you both happen to be in!
+                const { data: exactConvo } = await db.from("conversations")
+                    .select("id")
+                    .in("id", commonIds)
+                    .eq("is_group", false)
+                    .maybeSingle();
+
+                if (exactConvo) {
+                    existingConvoId = exactConvo.id;
+                }
+            }
+        }
+
+        let finalConversationId = existingConvoId;
+
+        // 4. If no private room exists yet, CREATE ONE!
+        if (!finalConversationId) {
+            const { data: newConvo, error: convoErr } = await db.from("conversations")
+                .insert([{ is_group: false, created_by: state.user.id }])
+                .select()
+                .single();
+                
+            if (convoErr) throw convoErr;
+            finalConversationId = newConvo.id;
+
+            // 5. Add both of you into the newly created room
+            await db.from("participants").insert([
+                { conversation_id: finalConversationId, user_id: state.user.id },
+                { conversation_id: finalConversationId, user_id: targetId }
+            ]);
+        }
+
+        // 6. Open the UI perfectly
+        showPage("chat");
+        await loadChatList();
+        
+        // Wait 100ms for the DOM to render the sidebar before clicking the room
+        setTimeout(() => {
+             openConversation(finalConversationId, targetUsername, mkAvatar(targetUsername));
+        }, 100);
+
+    } catch (e) {
+        console.error("Chat Start Error:", e);
+        showToast("error", "Failed to start private chat.");
     }
-  } catch (e) {
-    showToast("error", "Failed to start chat.");
-  }
 }
 
 // 6. Load the Inbox (Sidebar)
