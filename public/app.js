@@ -1763,10 +1763,9 @@ async function showPublicProfile(username) {
         
         // Show message button only if it's not our own profile
         if (state.user && state.user.email.split("@")[0] !== u.username) {
-         const btn = $("btnMessageUser");
-        btn.style.display = "block";
-        // 🚨 Bypass startChat completely and force the redirect here 🚨
-        btn.onclick = () => { window.location.href = `/dm.html?user=${u.id}`; };
+          const btn = $("btnMessageUser");
+          btn.style.display = "block";
+          btn.onclick = () => startChat(u.id, u.username);
         }
       } else {
         showToast("error", "User not found.");
@@ -1783,7 +1782,22 @@ $("backFromPublicProfile")?.addEventListener("click", showFeed);
 
 // 5. Start a Chat
 async function startChat(targetId, targetUsername) {
-  window.location.href = `/dm.html?user=${targetId}`;
+  try {
+    const res = await fetch("/api/chat/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ myId: state.user.id, targetId: targetId })
+    });
+    const data = await res.json();
+    
+    if (data.success) {
+      showPage("chat");
+      await loadChatList();
+      openConversation(data.conversation_id, targetUsername, mkAvatar(targetUsername));
+    }
+  } catch (e) {
+    showToast("error", "Failed to start chat.");
+  }
 }
 
 // 6. Load the Inbox (Sidebar)
