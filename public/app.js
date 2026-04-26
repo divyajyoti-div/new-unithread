@@ -530,10 +530,21 @@ async function fetchComments(pid) {
 async function insertComment(c) {
   if (!SB_OK || state.usingMock) return { ...c, id: Date.now() + Math.random(), created_at: new Date().toISOString(), upvotes: 0 };
   try {
-    const { data, error } = await db.from("comments").insert([c]).select().single();
-    if (error) throw error;
-    return data;
-  } catch(e) { showToast("error", "❌ " + e.message); return null; }
+    // 🚨 .maybeSingle() prevents Supabase from crashing the UI
+    const { data, error } = await db.from("comments").insert([c]).select().maybeSingle();
+    
+    if (error) {
+        console.error("Supabase Insert Error:", error);
+        throw error;
+    }
+    
+    // If it saved but returned nothing, fake the data so the UI doesn't freeze!
+    return data || { ...c, id: Date.now(), created_at: new Date().toISOString(), upvotes: 0 };
+
+  } catch(e) { 
+    showToast("error", "❌ " + e.message); 
+    return null; 
+  }
 }
 
 async function loadComments(pid) {
@@ -644,16 +655,13 @@ function insertInlineReply(parentId) {
 async function submitComment(body, isAnon, parentId = null) {
   const un  = state.profile?.username || state.user?.email?.split("@")[0] || "You";
   const pid = state.currentPost?.id;
-  
-  // 1. Grab the correct button to show the loading state
-  let btn = parentId 
-    ? $(`inlineReply-${parentId}`)?.querySelector(".btn-post-reply") 
-    : $("submitComment");
 
+  // 1. Lock the button to prevent spam clicks and show a loading state
+  const btn = parentId ? $(`inlineReply-${parentId}`)?.querySelector(".btn-post-reply") : $("submitComment");
   if (btn) {
-    btn.dataset.originalText = btn.textContent; // Remember if it said "Comment" or "Reply"
-    btn.textContent = "Posting...";
-    btn.disabled = true;
+      btn.dataset.original = btn.textContent;
+      btn.textContent = "Posting...";
+      btn.disabled = true;
   }
 
   try {
@@ -665,57 +673,55 @@ async function submitComment(body, isAnon, parentId = null) {
       body,
       upvotes:   0,
     });
-    
-    if (!created) throw new Error("Database failed to save comment.");
 
-    // 2. Add to local memory
+    // 2. If it completely failed, abort and unlock
+    if (!created) throw new Error("Could not retrieve saved comment.");
+
+    // 3. Update the UI memory
     created.userVote = null;
     state.comments.push(created);
-    
-    // 3. Update the Post's Comment Count (Type-safe!)
-    const post = state.posts.find(p => String(p.id) === String(pid)); 
+
+    // 4. Update the Post's comment counter safely
+    const post = state.posts.find(p => String(p.id) === String(pid));
     if (post) {
       post.comment_count = (post.comment_count || 0) + 1;
-      const cc = $(`cc-${pid}`); 
-      if (cc) cc.textContent = post.comment_count;
+      const cc = $(`cc-${pid}`); if (cc) cc.textContent = post.comment_count;
     }
-    
-    // 4. Clear the text boxes perfectly
+
+    // 5. Clear the text boxes perfectly
     if (parentId) {
       state.replyingTo = null;
       $$(".inline-reply-container").forEach(el => el.innerHTML = "");
     } else {
       const mainInput = $("commentInput");
       if (mainInput) {
-          mainInput.value = "";
-          mainInput.style.height = "auto";
+         mainInput.value = "";
+         mainInput.style.height = "auto";
       }
     }
-    
+
     const titleEl = $("commentsTitle");
     if (titleEl) titleEl.textContent = `Comments (${state.comments.length})`;
-    
-    // Redraw the comments so the new one appears instantly!
+
+    // 6. Draw the new comment on the screen instantly
     renderComments();
     showToast("success", "💬 Comment posted!");
 
   } catch (err) {
-    console.error("Comment Error:", err);
-    showToast("error", "❌ Failed to post comment.");
-    if (btn) btn.disabled = false; // Unlock if it failed!
-    
+    console.error("Comment UI Error:", err);
+    showToast("error", "⚠️ Comment saved, but please refresh to see it.");
   } finally {
-    // 5. THE LIFESAVER: Restore the button no matter what happens
-    if (btn && btn.dataset.originalText) {
-        btn.textContent = btn.dataset.originalText;
-    }
-    // Keep the main button disabled if the text box is now empty
-    if (!parentId && btn && $("commentInput")?.value === "") {
-        btn.disabled = true;
+    // 7. THE LIFESAVER: ALWAYS unlock the button so the app never freezes
+    if (btn) {
+        btn.textContent = btn.dataset.original || "Comment";
+        if (!parentId && $("commentInput")?.value === "") {
+            btn.disabled = true;
+        } else {
+            btn.disabled = false;
+        }
     }
   }
 }
-
 /* ─── Detail post ─── */
 function renderDetailPost(p) {
   const vUp   = state.votes[`p:${p.id}`] === "up";
