@@ -361,22 +361,18 @@ async function insertPost(post) {
   if (!SB_OK || state.usingMock) return { ...post, id: Date.now(), created_at: new Date().toISOString(), comments: [], upvotes: 0 };
   
   try {
-    // 🚨 THE FIX: Use .maybeSingle() so Supabase never crashes the UI
-    const { data, error } = await db.from("posts").insert([post]).select().maybeSingle();
-    
+    const { data, error } = await db.from("posts").insert([post]).select().single();
     if (error) throw error;
 
-    // Award 5 points for posting!
+    // --- NEW: AWARD 5 POINTS FOR POSTING ---
     if (state.user && state.user.id) {
         await awardPoints(state.user.id, 5);
     }
+    // ---------------------------------------
 
-    // Return the data safely, preventing the app from freezing
-    return data || { ...post, id: Date.now(), created_at: new Date().toISOString(), upvotes: 1, comment_count: 0 };
-    
+    return data;
   } catch(e) { 
-    console.error("Post Insert Error:", e);
-    showToast("error", "❌ Failed to save post. Please try again."); 
+    showToast("error", "❌ " + e.message); 
     return null; 
   }
 }
@@ -1104,28 +1100,15 @@ function closeDraftsDrawer() {
 }
 
 async function handleSubmitPost() {
-  // 🚨 1. ANTI-SPAM LOCK: Stop double-clicks instantly!
-  const submitBtn = $("submitPost");
-  if (submitBtn && submitBtn.disabled) return; 
-
   const title = $("postTitle")?.value.trim();
   if (!title) { showToast("error", "⚠️ Please enter a title."); $("postTitle")?.focus(); return; }
 
-  // 🚨 2. STALE SESSION CHECK: If the tab was open for hours, refresh the token securely!
-  if (SB_OK) {
-     const { data: { session } } = await db.auth.getSession();
-     if (!session) {
-         showToast("error", "⏳ Session expired! Refreshing securely...");
-         setTimeout(() => window.location.reload(), 1500);
-         return;
-     }
-  }
-
   const tab = cpState.tab;
+  const submitBtn = $("submitPost");
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Posting…"; }
 
   let body = null;
-  
+
   try {
     // 1. ALWAYS grab the text correctly (This fixes the squished paragraphs!)
     let typedText = "";
