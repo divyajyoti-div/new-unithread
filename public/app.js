@@ -644,33 +644,76 @@ function insertInlineReply(parentId) {
 async function submitComment(body, isAnon, parentId = null) {
   const un  = state.profile?.username || state.user?.email?.split("@")[0] || "You";
   const pid = state.currentPost?.id;
-  const created = await insertComment({
-    post_id:   pid,
-    parent_id: parentId || null,
-    author:    isAnon ? "Anonymous" : un,
-    author_id: isAnon ? null : (state.user?.id || null),
-    body,
-    upvotes:   0,
-  });
-  if (!created) return;
-  created.userVote = null;
-  state.comments.push(created);
-  const post = state.posts.find(p => p.id === pid);
-  if (post) {
-    post.comment_count = (post.comment_count || 0) + 1;
-    const cc = $(`cc-${pid}`); if (cc) cc.textContent = post.comment_count;
+  
+  // 1. Grab the correct button to show the loading state
+  let btn = parentId 
+    ? $(`inlineReply-${parentId}`)?.querySelector(".btn-post-reply") 
+    : $("submitComment");
+
+  if (btn) {
+    btn.dataset.originalText = btn.textContent; // Remember if it said "Comment" or "Reply"
+    btn.textContent = "Posting...";
+    btn.disabled = true;
   }
-  if (parentId) {
-    state.replyingTo = null;
-    $$(".inline-reply-container").forEach(el => el.innerHTML = "");
-  } else {
-    $("commentInput").value = "";
-    $("commentInput").style.height = "auto";
-    $("submitComment").disabled = true;
+
+  try {
+    const created = await insertComment({
+      post_id:   pid,
+      parent_id: parentId || null,
+      author:    isAnon ? "Anonymous" : un,
+      author_id: isAnon ? null : (state.user?.id || null),
+      body,
+      upvotes:   0,
+    });
+    
+    if (!created) throw new Error("Database failed to save comment.");
+
+    // 2. Add to local memory
+    created.userVote = null;
+    state.comments.push(created);
+    
+    // 3. Update the Post's Comment Count (Type-safe!)
+    const post = state.posts.find(p => String(p.id) === String(pid)); 
+    if (post) {
+      post.comment_count = (post.comment_count || 0) + 1;
+      const cc = $(`cc-${pid}`); 
+      if (cc) cc.textContent = post.comment_count;
+    }
+    
+    // 4. Clear the text boxes perfectly
+    if (parentId) {
+      state.replyingTo = null;
+      $$(".inline-reply-container").forEach(el => el.innerHTML = "");
+    } else {
+      const mainInput = $("commentInput");
+      if (mainInput) {
+          mainInput.value = "";
+          mainInput.style.height = "auto";
+      }
+    }
+    
+    const titleEl = $("commentsTitle");
+    if (titleEl) titleEl.textContent = `Comments (${state.comments.length})`;
+    
+    // Redraw the comments so the new one appears instantly!
+    renderComments();
+    showToast("success", "💬 Comment posted!");
+
+  } catch (err) {
+    console.error("Comment Error:", err);
+    showToast("error", "❌ Failed to post comment.");
+    if (btn) btn.disabled = false; // Unlock if it failed!
+    
+  } finally {
+    // 5. THE LIFESAVER: Restore the button no matter what happens
+    if (btn && btn.dataset.originalText) {
+        btn.textContent = btn.dataset.originalText;
+    }
+    // Keep the main button disabled if the text box is now empty
+    if (!parentId && btn && $("commentInput")?.value === "") {
+        btn.disabled = true;
+    }
   }
-  $("commentsTitle").textContent = `Comments (${state.comments.length})`;
-  renderComments();
-  showToast("success", "💬 Comment posted!");
 }
 
 /* ─── Detail post ─── */
