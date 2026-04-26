@@ -1097,15 +1097,23 @@ async function handleSubmitPost() {
       let imageTags = "";
       if (cpState.mediaFiles.length > 0) {
         submitBtn.textContent = "Uploading Media…";
-        let uploadedUrls = [];
+       let uploadedUrls = [];
         for (let file of cpState.mediaFiles) {
           const fileExt = file.name.split('.').pop();
           const fileName = `post_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
           const { error } = await db.storage.from('media').upload(fileName, file);
           if (error) throw new Error("Upload failed: " + error.message);
           const { data: urlData } = db.storage.from('media').getPublicUrl(fileName);
-          uploadedUrls.push(urlData.publicUrl);
+          
+          // 🚨 THE FIX: Tag documents as DOC, and everything else as IMAGE
+          if (file.isDoc) {
+            uploadedUrls.push(`[DOC:${urlData.publicUrl}|${file.originalName}]`);
+          } else {
+            uploadedUrls.push(`[IMAGE:${urlData.publicUrl}]`);
+          }
         }
+        // 🚨 IMPORTANT: Change this line too! We removed the forced map to [IMAGE]
+        imageTags = uploadedUrls.join("\n");
         imageTags = uploadedUrls.map(url => `[IMAGE:${url}]`).join("\n");
       }
       
@@ -1356,32 +1364,20 @@ function ago(iso) {
 }
 function formatBody(text) {
   if (!text) return "";
-  let safeText = esc(text); 
-  
-  // Convert image tags into actual HTML pictures
-  safeText = safeText.replace(/\[IMAGE:(https?:\/\/[^\]]+)\]/g, '<img src="$1" style="max-width:100%; border-radius:8px; margin-top:12px; max-height:500px; object-fit:cover; display:block;" alt="Post media"/>');
-  
-  // Make links clickable
-  safeText = safeText.replace(/🔗 (https?:\/\/[^\s<]+)/g, '🔗 <a href="$1" target="_blank" style="color:var(--brand); text-decoration:underline; word-break:break-all;">$1</a>');
-  
-  // Preserve line breaks for polls and long text
-  safeText = safeText.replace(/\n/g, "<br>");
-  
-  return safeText;
-}
-function formatBody(text) {
-  if (!text) return "";
   
   // 1. Escape HTML first to prevent malicious code (XSS)
   let safeText = esc(text); 
   
-  // 2. Convert our special [IMAGE:url] tags into actual HTML images
+  // 2. Convert standard images
   safeText = safeText.replace(/\[IMAGE:(https?:\/\/[^\]]+)\]/g, '<img src="$1" class="post-feed-img" style="max-width:100%; border-radius:8px; margin-top:12px; max-height:500px; object-fit:cover; display:block;" alt="Post media"/>');
   
-  // 3. Make Links (🔗 https://...) clickable
+  // 3. 🚨 NEW: Convert Documents into beautiful Purple Download Buttons!
+  safeText = safeText.replace(/\[DOC:(https?:\/\/[^\|\]]+)\|([^\]]+)\]/g, '<a href="$1" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:8px; background:var(--brand); color:white; padding:10px 16px; border-radius:8px; text-decoration:none; margin-top:12px; font-weight:bold; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);">📄 Download $2</a>');
+
+  // 4. Make Links clickable
   safeText = safeText.replace(/🔗 (https?:\/\/[^\s<]+)/g, '🔗 <a href="$1" target="_blank" rel="noopener noreferrer" style="color:var(--brand); text-decoration:underline; word-break:break-all;">$1</a>');
   
-  // 4. Preserve line breaks so Polls and paragraphs stack correctly
+  // 5. Preserve line breaks
   safeText = safeText.replace(/\n/g, "<br>");
   
   return safeText;
