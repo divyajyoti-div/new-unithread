@@ -1202,50 +1202,92 @@ async function deletePost(id) {
 }
 /* ─── Media files helper ─── */
 /* --- Media files helper --- */
-async function handleMediaFiles(files) {  // 1. ADDED ASYNC HERE
+/* --- Media files helper --- */
+async function handleMediaFiles(files) {  
   if (!files?.length) return;
-  const preview = $("cpMediaPreview");
   
-  // 2. CHANGED to a 'for...of' loop so we can use 'await'
+  $("cpUploadInner").style.display = "none"; // Hide big dropzone immediately
+  showToast("info", "Processing files...");
+
   for (let originalFile of Array.from(files)) {
-    if (cpState.mediaFiles.length >= 10) { showToast("info", "Max 10 files."); break; }
+    if (cpState.mediaFiles.length >= 10) { showToast("info", "Max 10 files allowed."); break; }
     
     let fileToUse = originalFile;
     const isVideo = originalFile.type.startsWith("video/");
+    const isDoc = originalFile.type === "application/pdf" || originalFile.name.endsWith(".doc") || originalFile.name.endsWith(".docx");
 
-    // 3. THE SHRINK RAY: If it's an image, compress it before doing anything else
-    if (!isVideo && originalFile.type.startsWith("image/")) {
-        console.log(`Shrinking ${originalFile.name}...`);
+    // Shrink images
+    if (!isVideo && !isDoc && originalFile.type.startsWith("image/")) {
         fileToUse = await compressImage(originalFile);
     }
 
     if (fileToUse.size > 50 * 1024 * 1024) { showToast("error", `${fileToUse.name} exceeds 50MB.`); continue; }
     
-    // 4. Save the SHRUNK file to your state instead of the massive original
+    // Tag the file properties for later
+    fileToUse.isDoc = isDoc; 
+    fileToUse.originalName = originalFile.name;
+    
     cpState.mediaFiles.push(fileToUse);
-    
-    const idx = cpState.mediaFiles.length - 1;
-    const url = URL.createObjectURL(fileToUse);
-    const div = document.createElement("div");
-    div.className = "cp-media-thumb";
-    
-    div.innerHTML = isVideo
-      ? `<video src="${url}" muted></video><button class="cp-media-thumb-del" data-i="${idx}">X</button>`
-      : `<img src="${url}" alt=""/><button class="cp-media-thumb-del" data-i="${idx}">X</button>`;
-      
-    div.querySelector(".cp-media-thumb-del").addEventListener("click", e => {
-      e.stopPropagation();
-      cpState.mediaFiles.splice(+e.currentTarget.dataset.i, 1);
-      div.remove();
-    });
-    
-    preview?.appendChild(div);
   }
   
-  if (preview?.children.length) {
-    $("cpUploadInner").style.display = "none";
+  // Now redraw the preview box perfectly
+  renderMediaPreview();
+}
+
+// 🚨 THE NEW UI BUILDER: Fixes the delete bug and adds the "+" button 🚨
+function renderMediaPreview() {
+    const preview = $("cpMediaPreview");
+    if (!preview) return;
+
+    preview.innerHTML = ""; // Wipe the box clean
+
+    // If they deleted everything, bring the massive dropzone back!
+    if (cpState.mediaFiles.length === 0) {
+        $("cpUploadInner").style.display = "flex";
+        preview.style.display = "none";
+        return;
+    }
+
     preview.style.display = "flex";
-  }
+
+    // 1. Draw all the uploaded files
+    cpState.mediaFiles.forEach((file, index) => {
+        const url = URL.createObjectURL(file);
+        const div = document.createElement("div");
+        div.className = "cp-media-thumb";
+        
+        if (file.isDoc) {
+            div.innerHTML = `<div style="padding:20px; background:var(--bg-mid); color:white; border-radius:8px; text-align:center; height:100%; display:flex; flex-direction:column; justify-content:center;">📄<br><small style="font-size:0.7rem; margin-top:5px; word-break:break-all;">${file.originalName}</small></div><button class="cp-media-thumb-del">X</button>`;
+        } else if (file.type.startsWith("video/")) {
+            div.innerHTML = `<video src="${url}" muted></video><button class="cp-media-thumb-del">X</button>`;
+        } else {
+            div.innerHTML = `<img src="${url}" alt=""/><button class="cp-media-thumb-del">X</button>`;
+        }
+          
+        // Safe Delete: Always splices the EXACT current index
+        div.querySelector(".cp-media-thumb-del").addEventListener("click", e => {
+            e.stopPropagation();
+            cpState.mediaFiles.splice(index, 1);
+            renderMediaPreview(); // Recursively redraw the UI perfectly
+        });
+        
+        preview.appendChild(div);
+    });
+
+    // 2. Add the "➕ Add More" button at the very end
+    if (cpState.mediaFiles.length < 10) {
+        const addMoreDiv = document.createElement("div");
+        addMoreDiv.className = "cp-media-thumb";
+        addMoreDiv.style.cssText = "cursor:pointer; display:flex; align-items:center; justify-content:center; background:var(--bg-mid); border: 2px dashed var(--border-2); border-radius: 8px;";
+        addMoreDiv.innerHTML = `<span style="font-size: 2.5rem; color: var(--text-3); font-weight: 300;">+</span>`;
+        
+        // Clicking this opens the computer's file picker again
+        addMoreDiv.addEventListener("click", () => {
+            $("cpFileInput")?.click();
+        });
+        
+        preview.appendChild(addMoreDiv);
+    }
 }
 
 function updatePollRemoveBtns() {
