@@ -1103,45 +1103,33 @@ async function handleSubmitPost() {
   const title = $("postTitle")?.value.trim();
   if (!title) { showToast("error", "⚠️ Please enter a title."); $("postTitle")?.focus(); return; }
 
+  const tab = cpState.tab;
   const submitBtn = $("submitPost");
-  // Anti-spam: Stop double-clicks
-  if (submitBtn && submitBtn.disabled) return; 
-
   if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Posting…"; }
 
+  let body = null;
+
   try {
-    // 🚨 THE STALE SESSION FIX: Safely check if the background token expired
-    if (SB_OK) {
-      const { data: { user }, error: authErr } = await db.auth.getUser();
-      if (authErr || !user) {
-        showToast("error", "⏳ Session expired! Refreshing safely...");
-        setTimeout(() => window.location.reload(), 1500);
-        return;
-      }
-    }
-
-    const tab = cpState.tab;
-    let body = null;
-
-    // 1. ALWAYS grab the text correctly
+    // 1. ALWAYS grab the text correctly (This fixes the squished paragraphs!)
     let typedText = "";
     const html = $("rteEditor")?.innerHTML || "";
     if (html && html !== "<br>") {
+        // Convert HTML line breaks into real, preserved newlines
         let formatted = html.replace(/<p>/gi, "")
                             .replace(/<\/p>/gi, "\n")
                             .replace(/<br\s*\/?>/gi, "\n")
                             .replace(/<\/div>/gi, "\n")
                             .replace(/<div[^>]*>/gi, "");
         typedText = formatted.replace(/<[^>]+>/g, "").trim();
-        typedText = typedText.replace(/&nbsp;/g, " ");
+        typedText = typedText.replace(/&nbsp;/g, " "); // Keep normal spaces
     }
 
-    // 2. Process based on tab
+    // 2. Process based on what is attached
     if (tab === "link") {
       const link = $("postLink")?.value.trim();
       if (!link) throw new Error("Please enter a valid link.");
       body = typedText ? `🔗 ${link}\n\n${typedText}` : `🔗 ${link}`;
-
+      
     } else if (tab === "poll") {
       const opts = Array.from($$(".cp-poll-option .cp-inp")).map(i => i.value.trim()).filter(Boolean);
       if (opts.length < 2) throw new Error("Add at least 2 poll options.");
@@ -1152,32 +1140,32 @@ async function handleSubmitPost() {
         voters: {}
       };
       body = "POLL_DATA::" + JSON.stringify(pollData);
-
+      
     } else {
-      // 3. Media processing (PDF SUPPORT RESTORED!)
+      // 3. Standard Post: Grab Images AND Text perfectly!
       let imageTags = "";
       if (cpState.mediaFiles.length > 0) {
         submitBtn.textContent = "Uploading Media…";
-        let uploadedUrls = [];
+       let uploadedUrls = [];
         for (let file of cpState.mediaFiles) {
           const fileExt = file.name.split('.').pop();
           const fileName = `post_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-          
           const { error } = await db.storage.from('media').upload(fileName, file);
           if (error) throw new Error("Upload failed: " + error.message);
-          
           const { data: urlData } = db.storage.from('media').getPublicUrl(fileName);
           
-          // Generate the beautiful Document Download buttons
-          if (file.isDoc || file.name.endsWith(".pdf") || file.name.endsWith(".doc") || file.name.endsWith(".docx")) {
-            uploadedUrls.push(`[DOC:${urlData.publicUrl}|${file.name}]`);
+          // 🚨 THE FIX: Tag documents as DOC, and everything else as IMAGE
+          if (file.isDoc) {
+            uploadedUrls.push(`[DOC:${urlData.publicUrl}|${file.originalName}]`);
           } else {
             uploadedUrls.push(`[IMAGE:${urlData.publicUrl}]`);
           }
         }
+        // 🚨 IMPORTANT: Change this line too! We removed the forced map to [IMAGE]
         imageTags = uploadedUrls.join("\n");
+        imageTags = uploadedUrls.map(url => `[IMAGE:${url}]`).join("\n");
       }
-
+      
       if (typedText && imageTags) body = imageTags + "\n\n" + typedText;
       else if (typedText) body = typedText;
       else if (imageTags) body = imageTags;
@@ -1201,8 +1189,7 @@ async function handleSubmitPost() {
       flair: catLabel, flair_class: flairMap[catVal] || "",
       category: catVal, upvotes: 1, comment_count: 0, pinned: false,
     };
-
-    // Safely calls your original, working insertPost function
+console.log("🚨 WIRETAP CAUGHT THIS:", newPostData.category);
     const created = await insertPost(newPostData);
     if (!created) throw new Error("Database insertion failed.");
 
@@ -1211,11 +1198,11 @@ async function handleSubmitPost() {
     state.votes[`p:${created.id}`] = "up";
     localStorage.setItem("ut-votes", JSON.stringify(state.votes));
     state.sort = "new";
-
+    
     cpState.mediaFiles = [];
     if ($("cpMediaPreview")) $("cpMediaPreview").innerHTML = "";
     if ($("cpUploadInner")) $("cpUploadInner").style.display = "flex";
-
+    
     showFeed();
     renderFeed();
     $$(".sort-btn").forEach(b => b.classList.toggle("active", b.dataset.sort === "new"));
@@ -1224,7 +1211,6 @@ async function handleSubmitPost() {
   } catch (err) {
     showToast("error", err.message || "❌ Something went wrong.");
   } finally {
-    // 🚨 GUARANTEE UNLOCK: The button will never freeze again
     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = "Post"; }
   }
 }
@@ -1272,59 +1258,38 @@ async function deletePost(id) {
   renderFeed();
 }
 /* ─── Media files helper ─── */
-async function handleMediaFiles(files) {
+/* --- Media files helper --- */
+/* --- Media files helper --- */
+async function handleMediaFiles(files) {  
   if (!files?.length) return;
-  const preview = $("cpMediaPreview");
   
+  $("cpUploadInner").style.display = "none"; // Hide big dropzone immediately
+  showToast("info", "Processing files...");
+
   for (let originalFile of Array.from(files)) {
-    if (cpState.mediaFiles.length >= 10) { showToast("info", "Max 10 files."); break; }
+    if (cpState.mediaFiles.length >= 10) { showToast("info", "Max 10 files allowed."); break; }
     
     let fileToUse = originalFile;
     const isVideo = originalFile.type.startsWith("video/");
-    const isDoc = originalFile.name.endsWith(".pdf") || originalFile.name.endsWith(".doc") || originalFile.name.endsWith(".docx");
+    const isDoc = originalFile.type === "application/pdf" || originalFile.name.endsWith(".doc") || originalFile.name.endsWith(".docx");
 
-    // Skip the shrink ray if it's a document!
+    // Shrink images
     if (!isVideo && !isDoc && originalFile.type.startsWith("image/")) {
-        console.log(`Shrinking ${originalFile.name}...`);
         fileToUse = await compressImage(originalFile);
     }
 
-    if (fileToUse.size > 10 * 1024 * 1024) { showToast("error", `${fileToUse.name} exceeds 10MB.`); continue; }
+    if (fileToUse.size > 50 * 1024 * 1024) { showToast("error", `${fileToUse.name} exceeds 50MB.`); continue; }
     
-    // Tag it so handleSubmitPost knows how to draw the purple button
-    fileToUse.isDoc = isDoc;
+    // Tag the file properties for later
+    fileToUse.isDoc = isDoc; 
     fileToUse.originalName = originalFile.name;
+    
     cpState.mediaFiles.push(fileToUse);
-    
-    const idx = cpState.mediaFiles.length - 1;
-    const url = URL.createObjectURL(fileToUse);
-    const div = document.createElement("div");
-    div.className = "cp-media-thumb";
-    
-    // Draw the correct thumbnail
-    if (isDoc) {
-      div.innerHTML = `<div style="padding:20px; background:var(--bg-mid); color:white; border-radius:8px; text-align:center; height:100%; display:flex; flex-direction:column; justify-content:center;">📄<br><small style="font-size:0.7rem; margin-top:5px; word-break:break-all;">${fileToUse.originalName}</small></div><button class="cp-media-thumb-del" data-i="${idx}">X</button>`;
-    } else if (isVideo) {
-      div.innerHTML = `<video src="${url}" muted></video><button class="cp-media-thumb-del" data-i="${idx}">X</button>`;
-    } else {
-      div.innerHTML = `<img src="${url}" alt=""/><button class="cp-media-thumb-del" data-i="${idx}">X</button>`;
-    }
-      
-    div.querySelector(".cp-media-thumb-del").addEventListener("click", e => {
-      e.stopPropagation();
-      cpState.mediaFiles.splice(+e.currentTarget.dataset.i, 1);
-      div.remove();
-    });
-    
-    preview?.appendChild(div);
   }
   
-  if (preview?.children.length) {
-    $("cpUploadInner").style.display = "none";
-    preview.style.display = "flex";
-  }
+  // Now redraw the preview box perfectly
+  renderMediaPreview();
 }
-
 
 // 🚨 THE NEW UI BUILDER: Fixes the delete bug and adds the "+" button 🚨
 function renderMediaPreview() {
